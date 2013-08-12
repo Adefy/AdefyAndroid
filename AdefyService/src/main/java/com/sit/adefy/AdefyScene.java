@@ -3,6 +3,8 @@ package com.sit.adefy;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,6 +12,7 @@ import android.util.Log;
 import com.sit.adefy.objects.Actor;
 import com.sit.adefy.physics.PhysicsEngine;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -26,11 +29,16 @@ import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import javax.microedition.khronos.opengles.GL10;
+
 public class AdefyScene extends Activity {
 
   private static ArrayList<Actor> actors = new ArrayList<Actor>();
   private static Renderer renderer = null;
   private static PhysicsEngine psyx = null;
+  JSONObject jsonObj = new JSONObject();
+  JSONArray textureArray = new JSONArray();
+  public static int [] bitmapTexture;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -65,18 +73,40 @@ public class AdefyScene extends Activity {
       e.printStackTrace();
     }
 
-
-    JSONObject jsonObj = new JSONObject();
+    String texturesPath = "";
 
     Log.v("Adefy", "This is what the file contains: " + jsonText);
 
     try {
       jsonObj = new JSONObject(jsonText);
-      Log.v("Adefy", "Content of JSON key:" + jsonObj.getString("author"));
+      Log.v("Adefy", "Content of JSON key:" + jsonObj.getJSONArray("textures"));
+      textureArray = jsonObj.getJSONArray("textures");
+      Log.v("Adefy", "path to textures:" + this.getCacheDir() + "/" + folderName + "/textures");
+
     }
     catch (JSONException e){
       e.printStackTrace();
       Log.v("Adefy", "JSON EXCEPTION");
+    }
+  }
+
+  public void refreshTextures(GL10 gl, Bitmap textureBitmap, String folderName)  {
+
+    BitmapFactory tempTexture = new BitmapFactory();
+    String tempString = "";
+    for (int i=0; i<textureArray.length(); i++)  {
+
+      try {
+        tempString = textureArray.getString(i);
+      } catch (JSONException e) {
+        e.printStackTrace();
+      }
+      tempTexture.decodeFile(this.getCacheDir() + "/" + folderName + "/textures/" + tempString);
+
+      gl.glGenTextures(1, bitmapTexture, 0);
+      gl.glBindTexture(GL10.GL_TEXTURE_2D, bitmapTexture[i]);
+
+      textureBitmap.recycle();
     }
   }
 
