@@ -1,0 +1,5 @@
+out
+AdefyService/build
+.idea
+.gradle
+local.properties
