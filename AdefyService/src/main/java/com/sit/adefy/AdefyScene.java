@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
@@ -83,6 +84,7 @@ public class AdefyScene extends Activity {
       textureArray = jsonObj.getJSONArray("textures");
       Log.v("Adefy", "path to textures:" + this.getCacheDir() + "/" + folderName + "/textures");
 
+      refreshTextures(folderName);
     }
     catch (JSONException e){
       e.printStackTrace();
@@ -90,24 +92,35 @@ public class AdefyScene extends Activity {
     }
   }
 
-  public void refreshTextures(GL10 gl, Bitmap textureBitmap, String folderName)  {
+  public void refreshTextures(String folderName)  {
 
-    BitmapFactory tempTexture = new BitmapFactory();
+    Bitmap textureBitmap;
+
+    Log.v("Adefy", "refreshTextures called for the following folder: "  + folderName);
+
     String tempString = "";
-    for (int i=0; i<textureArray.length(); i++)  {
+    for (int i=0; i<textureArray.length() - 2; i++)  { //TODO:Change back to not -2 length; just a test for memory
 
       try {
         tempString = textureArray.getString(i);
+        Log.v("Adefy", tempString);
       } catch (JSONException e) {
         e.printStackTrace();
       }
-      tempTexture.decodeFile(this.getCacheDir() + "/" + folderName + "/textures/" + tempString);
+      textureBitmap = BitmapFactory.decodeFile(this.getCacheDir() + "/" + folderName + "/textures/" + tempString);
 
-      gl.glGenTextures(1, bitmapTexture, 0);
-      gl.glBindTexture(GL10.GL_TEXTURE_2D, bitmapTexture[i]);
+      GLES20.glGenTextures(1, bitmapTexture, 0);
+      GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, bitmapTexture[i]);
+
+      GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+      GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
 
       textureBitmap.recycle();
+
+      if(bitmapTexture[i] == 0)
+        Log.v("Adefy", "No texture?!?!?!?!?!?");
     }
+
   }
 
   public void unzipArchive(String path, String dir) throws IOException {
