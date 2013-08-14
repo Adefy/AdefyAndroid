@@ -159,7 +159,6 @@ public class AdefyDownloader {
     // Write data
     while((count = input.read(data)) != -1) {
       out.write(data, 0, count);
-      Log.v("Adefy", "Wrote");
     }
 
     out.flush();

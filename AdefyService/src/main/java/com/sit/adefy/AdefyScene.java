@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.opengl.GLUtils;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -37,9 +38,9 @@ public class AdefyScene extends Activity {
   private static ArrayList<Actor> actors = new ArrayList<Actor>();
   private static Renderer renderer = null;
   private static PhysicsEngine psyx = null;
-  JSONObject jsonObj = new JSONObject();
-  JSONArray textureArray = new JSONArray();
-  public static int [] bitmapTexture;
+  private JSONObject jsonObj = new JSONObject();
+  private JSONArray textureArray = new JSONArray();
+  private static ArrayList<TextureDescriptor> textures = new ArrayList<TextureDescriptor>();
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -84,43 +85,46 @@ public class AdefyScene extends Activity {
       textureArray = jsonObj.getJSONArray("textures");
       Log.v("Adefy", "path to textures:" + this.getCacheDir() + "/" + folderName + "/textures");
 
-      refreshTextures(folderName);
     }
     catch (JSONException e){
       e.printStackTrace();
       Log.v("Adefy", "JSON EXCEPTION");
     }
+
+    refreshTextures("adefyFolder");
   }
 
   public void refreshTextures(String folderName)  {
 
-    Bitmap textureBitmap;
-
     Log.v("Adefy", "refreshTextures called for the following folder: "  + folderName);
 
-    String tempString = "";
-    for (int i=0; i<textureArray.length() - 2; i++)  { //TODO:Change back to not -2 length; just a test for memory
+    for (int i = 0; i < textureArray.length(); i++)  {
 
       try {
-        tempString = textureArray.getString(i);
-        Log.v("Adefy", tempString);
+
+        TextureDescriptor textureDescriptor = new TextureDescriptor(textureArray.getString(i));
+        GLES20.glGenTextures(1, textureDescriptor.getHandle(), 0);
+
+        Bitmap textureBitmap = BitmapFactory.decodeFile(this.getCacheDir() + "/" + folderName + "/textures/" + textureArray.getString(i));
+
+        Log.v("Adefy", "Loaded bitmap " + textureArray.getString(i) + " size " + (textureBitmap.getByteCount() / 1024) + "kB");
+
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureDescriptor.getHandle()[0]);
+
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+
+        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, textureBitmap, 0);
+
+        textureBitmap.recycle();
+        textures.add(textureDescriptor);
+
       } catch (JSONException e) {
         e.printStackTrace();
       }
-      textureBitmap = BitmapFactory.decodeFile(this.getCacheDir() + "/" + folderName + "/textures/" + tempString);
-
-      GLES20.glGenTextures(1, bitmapTexture, 0);
-      GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, bitmapTexture[i]);
-
-      GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-      GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
-
-      textureBitmap.recycle();
-
-      if(bitmapTexture[i] == 0)
-        Log.v("Adefy", "No texture?!?!?!?!?!?");
     }
 
+    Log.v("Adefy", "Loaded " + textures.size() + " into GL memory");
   }
 
   public void unzipArchive(String path, String dir) throws IOException {
@@ -162,4 +166,18 @@ public class AdefyScene extends Activity {
   public static ArrayList<Actor> getActors() { return actors; }
   public static PhysicsEngine getPhysicsEngine() { return psyx; }
   public static Renderer getRenderer() { return renderer; }
+
+  // Make a class holding a String name and an int[1] handle
+  private class TextureDescriptor {
+
+    private String path;
+    private int[] handle = new int[1];
+
+    public TextureDescriptor(String _path) {
+      path = _path;
+    }
+
+    public String getPath() { return path; }
+    public int[] getHandle() { return handle; }
+  }
 }
