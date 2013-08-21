@@ -1,5 +1,6 @@
 package com.sit.adefy.js;
 
+import android.util.Log;
 import android.webkit.JavascriptInterface;
 
 import com.sit.adefy.Renderer;
@@ -18,6 +19,8 @@ public class JSActorInterface {
   @JavascriptInterface
   public int createActor(String verts) {
 
+    Log.v("adefy", "createActor called: " + verts);
+
     // Generate vert array
     // Verts are seperated by commas
     String[] vertsArray = verts.split(",");
@@ -30,7 +33,7 @@ public class JSActorInterface {
 
     // Ship actor
     int id = getNextID();
-    Renderer.actors.add(new Actor(id, _verts));
+    Actor a = new Actor(id, _verts);
 
     return id;
   }
@@ -38,7 +41,9 @@ public class JSActorInterface {
   // Set actor position using id
   // Fails with false if actor is not found
   @JavascriptInterface
-  public boolean setActorPosition(int id, float x, float y) {
+  public boolean setActorPosition(float x, float y, int id) {
+
+    Log.v("adefy", "setActorPosition called: x:" + x + " y:" + y);
 
     for(Actor a : Renderer.actors) {
       if(a.getId() == id) {
@@ -57,6 +62,8 @@ public class JSActorInterface {
   @JavascriptInterface
   public String getActorPosition(int id) {
 
+    Log.v("adefy", "getActorPosition called");
+
     for(Actor a : Renderer.actors) {
       if(a.getId() == id) {
         Vec2 v = a.getPosition();
@@ -70,6 +77,8 @@ public class JSActorInterface {
   // Set actor rotation in radians, fails with false if the actor is not found
   @JavascriptInterface
   public boolean setActorRotation(float angle, int id, boolean radians) {
+
+    Log.v("adefy", "setActorRotation called: angle:" + angle + " radians:" + radians);
 
     for(Actor a : Renderer.actors) {
       if(a.getId() == id) {
@@ -88,6 +97,8 @@ public class JSActorInterface {
   // Fails with -1
   @JavascriptInterface
   public float getActorRotation(int id, boolean radians) {
+
+    Log.v("adefy", "getActorRotation called");
 
     for(Actor a : Renderer.actors) {
       if(a.getId() == id) {
@@ -108,6 +119,8 @@ public class JSActorInterface {
   @JavascriptInterface
   public boolean setActorColor(int r, int g, int b, int id) {
 
+    Log.v("adefy", "setActorColor called: r:" + r + " g:" + g + " b:" + b);
+
     for(Actor a : Renderer.actors) {
       if(a.getId() == id) {
         a.color.r = r;
@@ -124,6 +137,8 @@ public class JSActorInterface {
   @JavascriptInterface
   public String getActorColor(int id) {
 
+    Log.v("adefy", "getActorColor called");
+
     for(Actor a : Renderer.actors) {
       if(a.getId() == id) {
         return "{ r: " + a.color.r + ", g: " + a.color.g + ", b: " + a.color.b + " }";
@@ -134,13 +149,17 @@ public class JSActorInterface {
   }
 
   // Enable actor physics using id, fails with false if actor is not found
-  // TODO: Mass is currently ignored, and defaults to 1.0
+  // TODO: Mass is currently capped at 1.0, and truncated. Add better handling
   @JavascriptInterface
   public boolean enableActorPhysics(float mass, float friction, float elasticity, int id) {
 
+    if(mass > 1.0f) { mass = 1.0f; }
+
+    Log.v("adefy", "enableActorPhysics called: mass:" + mass + " friction:" + friction + " elasticity:" + elasticity);
+
     for(Actor a : Renderer.actors) {
       if(a.getId() == id) {
-        a.createPhysicsBody(1.0f, friction, elasticity);
+        a.createPhysicsBody(mass, friction, elasticity);
         return true;
       }
     }
@@ -151,6 +170,8 @@ public class JSActorInterface {
   // Destroy physics body using id, fails with false if actor is not found
   @JavascriptInterface
   public boolean destroyPhysicsBody(int id) {
+
+    Log.v("adefy", "destroyPhysicsBody called");
 
     for(Actor a : Renderer.actors) {
       if(a.getId() == id) {

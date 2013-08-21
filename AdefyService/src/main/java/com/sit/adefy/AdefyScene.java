@@ -10,6 +10,8 @@ import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
 import android.os.Bundle;
 import android.util.Log;
+import android.webkit.ConsoleMessage;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 
 import com.sit.adefy.js.JSActorInterface;
@@ -37,7 +39,6 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class AdefyScene extends Activity {
 
-  private static ArrayList<Actor> actors = new ArrayList<Actor>();
   private static Renderer renderer = null;
   private static PhysicsEngine psyx = null;
   private static WebView web = null;
@@ -64,28 +65,17 @@ public class AdefyScene extends Activity {
     File jsonFile = new File(this.getCacheDir() + "/" + folderName + "/package.json");
     String jsonText = "";
     BufferedReader br = null;
+    String texturesPath = "";
     try {
       br = new BufferedReader(new FileReader(jsonFile.toString()));
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    }
-    try {
-
       String crtLine;
 
-      while((crtLine = br.readLine()) != null)
-        jsonText += crtLine;
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+      while((crtLine = br.readLine()) != null) { jsonText += crtLine; }
 
-    String texturesPath = "";
-
-    try {
       jsonObj = new JSONObject(jsonText);
-      textureArray = jsonObj.getJSONArray("textures");
-    }
-    catch (JSONException e){
+      //textureArray = jsonObj.getJSONArray("textures");
+
+    } catch (Exception e) {
       e.printStackTrace();
     }
 
@@ -93,6 +83,17 @@ public class AdefyScene extends Activity {
 
     // Create webview
     web = new WebView(this);
+    web.getSettings().setJavaScriptEnabled(true);
+
+    // Set up console logging
+    web.setWebChromeClient(new WebChromeClient() {
+
+      public boolean onConsoleMessage(ConsoleMessage cm) {
+
+        Log.d("adefy", cm.message() + " -- line " + cm.lineNumber() + " of " + cm.sourceId());
+        return true;
+      }
+    });
 
     // Load the interface
     web.addJavascriptInterface(new JSActorInterface(), "__iface_actor");
@@ -203,7 +204,6 @@ public class AdefyScene extends Activity {
     }
   }
 
-  public static ArrayList<Actor> getActors() { return actors; }
   public static PhysicsEngine getPhysicsEngine() { return psyx; }
   public static Renderer getRenderer() { return renderer; }
 

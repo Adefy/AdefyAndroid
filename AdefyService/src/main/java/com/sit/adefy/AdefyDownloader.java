@@ -43,7 +43,7 @@ import javax.net.ssl.X509TrustManager;
 public class AdefyDownloader {
 
   // TODO: Make this private! It's only public for testing
-  public String serverInterface = "https://192.168.0.101:3000/r/fetch/";
+  public String serverInterface = "https://192.168.1.3:3000/r/fetch/";
   private UserInformation uInfo;
   private Context ctx;
   private String APIKey;

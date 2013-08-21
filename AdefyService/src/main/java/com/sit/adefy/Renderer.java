@@ -3,6 +3,8 @@ package com.sit.adefy;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
+import android.util.Log;
+
 import com.sit.adefy.objects.Actor;
 
 import org.jbox2d.common.Vec2;
@@ -115,7 +117,7 @@ public class Renderer implements GLSurfaceView.Renderer {
 
     GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-    for(Actor a : AdefyScene.getActors()) {
+    for(Actor a : Renderer.actors) {
       a.draw();
     }
 

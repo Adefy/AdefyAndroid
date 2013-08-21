@@ -2,6 +2,8 @@ package com.sit.adefy.objects;
 
 import android.opengl.GLES20;
 import android.opengl.Matrix;
+import android.util.Log;
+
 import com.sit.adefy.Renderer;
 import com.sit.adefy.physics.BodyQueueDef;
 import com.sit.adefy.physics.PhysicsEngine;
@@ -12,11 +14,13 @@ import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.BodyDef;
 import org.jbox2d.dynamics.BodyType;
 import org.jbox2d.dynamics.FixtureDef;
+import org.json.JSONArray;
 
 import javax.microedition.khronos.opengles.GL10;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 
 public class Actor {
 
@@ -43,19 +47,25 @@ public class Actor {
   private float density;
   private float restitution;
 
-  private int positionHandle = GLES20.glGetAttribLocation(Renderer.getShaderProg(), "Position");
-  private int colorHandle = GLES20.glGetUniformLocation(Renderer.getShaderProg(), "Color");
-  private int modelHandle = GLES20.glGetUniformLocation(Renderer.getShaderProg(), "ModelView");
-
   public Actor(int _id, float[] _vertices) {
 
     this.id = _id;
-    this.vertices = _vertices;
+    this.vertices = new float[(int)(_vertices.length * 1.5f)];
 
-    Renderer.actors.add(this);
+    // Add z coord of 1
+    int set = 0;
+    for(int i = 0; i < this.vertices.length; i += 3) {
+      this.vertices[i] = _vertices[set];
+      this.vertices[i + 1] = _vertices[set + 1];
+      this.vertices[i + 2] = 1;
+
+      set += 2;
+    }
 
     // Build initial actor
     refreshVertBuffer();
+
+    Renderer.actors.add(this);
   }
 
   // Refreshes the internal vertex buffer
@@ -142,6 +152,10 @@ public class Actor {
   }
 
   public void draw() {
+
+    int positionHandle = GLES20.glGetAttribLocation(Renderer.getShaderProg(), "Position");
+    int colorHandle = GLES20.glGetUniformLocation(Renderer.getShaderProg(), "Color");
+    int modelHandle = GLES20.glGetUniformLocation(Renderer.getShaderProg(), "ModelView");
 
     if(!visible) { return; }
 
