@@ -10,7 +10,9 @@ import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
 import android.os.Bundle;
 import android.util.Log;
+import android.webkit.WebView;
 
+import com.sit.adefy.js.JSActorInterface;
 import com.sit.adefy.objects.Actor;
 import com.sit.adefy.physics.PhysicsEngine;
 
@@ -38,6 +40,8 @@ public class AdefyScene extends Activity {
   private static ArrayList<Actor> actors = new ArrayList<Actor>();
   private static Renderer renderer = null;
   private static PhysicsEngine psyx = null;
+  private static WebView web = null;
+
   private JSONObject jsonObj = new JSONObject();
   private JSONArray textureArray = new JSONArray();
   private static ArrayList<TextureDescriptor> textures = new ArrayList<TextureDescriptor>();
@@ -77,21 +81,57 @@ public class AdefyScene extends Activity {
 
     String texturesPath = "";
 
-    Log.v("Adefy", "This is what the file contains: " + jsonText);
-
     try {
       jsonObj = new JSONObject(jsonText);
-      Log.v("Adefy", "Content of JSON key:" + jsonObj.getJSONArray("textures"));
       textureArray = jsonObj.getJSONArray("textures");
-      Log.v("Adefy", "path to textures:" + this.getCacheDir() + "/" + folderName + "/textures");
-
     }
     catch (JSONException e){
       e.printStackTrace();
-      Log.v("Adefy", "JSON EXCEPTION");
     }
 
-    refreshTextures("adefyFolder");
+    //refreshTextures("adefyFolder");
+
+    // Create webview
+    web = new WebView(this);
+
+    // Load the interface
+    web.addJavascriptInterface(new JSActorInterface(), "__iface_actor");
+    web.loadData("", "text/html", null);
+    web.loadUrl("javascript:window.AdefyGLI = {};window.AdefyGLI.Actors = function(){return window.__iface_actor;};");
+
+    // Load our middleware
+    web.loadUrl("javascript:" + getJS("adefy.js", folderName));
+
+    try {
+
+      // TODO: We are executing arbitrary JS, preform some security checks!
+
+      // Run the first scene to test
+      String scene = getJS(jsonObj.getJSONObject("scenes").getString("1"), folderName);
+      web.loadUrl("javascript:" + scene);
+      web.loadUrl("javascript:scene();");
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  private String getJS(String name, String folder) {
+    File jsFile = new File(this.getCacheDir() + "/" + folder + "/" + name);
+    String js = "";
+    String line;
+    BufferedReader br = null;
+
+    try {
+
+      br = new BufferedReader(new FileReader(jsFile.toString()));
+      while((line = br.readLine()) != null) { js += line; }
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    return js;
   }
 
   public void refreshTextures(String folderName)  {
