@@ -37,6 +37,7 @@ public class Actor {
   protected float vertices[];
   protected float texVerts[] = null;
   protected int[] texture = new int[1];
+  protected float psyxVertices[] = null;
 
   protected Vec2 position = new Vec2(0.0f, 0.0f);
   protected float rotation = 0.0f;
@@ -51,25 +52,26 @@ public class Actor {
   private float density;
   private float restitution;
 
+  public int renderMode = 2;
+
   public Actor(int _id, float[] _vertices) {
-
     this.id = _id;
-    this.vertices = new float[(int)(_vertices.length * 1.5f)];
-
-    // Add z coord of 1
-    int set = 0;
-    for(int i = 0; i < this.vertices.length; i += 3) {
-      this.vertices[i] = _vertices[set];
-      this.vertices[i + 1] = _vertices[set + 1];
-      this.vertices[i + 2] = 1;
-
-      set += 2;
-    }
 
     // Build initial actor
-    refreshVertBuffer();
+    updateVertices(_vertices);
 
     Renderer.actors.add(this);
+  }
+
+  public void setPhysicsVertices(float[] verts) {
+    this.psyxVertices = verts;
+    refreshVertBuffer();
+  }
+
+  public void destroy() {
+
+    if(body != null) { destroyPhysicsBody(); }
+    Renderer.actors.remove(this);
   }
 
   // Refreshes the internal vertex buffer
@@ -86,6 +88,24 @@ public class Actor {
       destroyPhysicsBody();
       createPhysicsBody(density, friction, restitution);
     }
+  }
+
+  public void updateVertices(float[] _vertices) {
+
+    this.vertices = new float[(int)(_vertices.length * 1.5f)];
+
+    // Add z coord of 1
+    int set = 0;
+    for(int i = 0; i < this.vertices.length; i += 3) {
+      this.vertices[i] = _vertices[set];
+      this.vertices[i + 1] = _vertices[set + 1];
+      this.vertices[i + 2] = 1;
+
+      set += 2;
+    }
+
+    // Rebuild buffers
+    refreshVertBuffer();
   }
 
   // Manipulate the physics body
@@ -125,15 +145,29 @@ public class Actor {
 
       // Create fixture from vertices
       PolygonShape shape = new PolygonShape();
-      Vec2[] verts = new Vec2[vertices.length / 3];
 
-      int vertIndex = 0;
-      for(int i = 0; i < vertices.length; i += 3) {
-        verts[vertIndex] = new Vec2(vertices[i] / Renderer.getPPM(), vertices[i + 1] / Renderer.getPPM());
-        vertIndex++;
+      if(psyxVertices != null) {
+        Vec2[] verts = new Vec2[psyxVertices.length / 2];
+
+        int vertIndex = 0;
+        for(int i = 0; i < psyxVertices.length; i += 2) {
+          verts[vertIndex] = new Vec2(psyxVertices[i] / Renderer.getPPM(), psyxVertices[i + 1] / Renderer.getPPM());
+          vertIndex++;
+        }
+
+        shape.set(verts, verts.length);
+
+      } else {
+        Vec2[] verts = new Vec2[vertices.length / 3];
+
+        int vertIndex = 0;
+        for(int i = 0; i < vertices.length; i += 3) {
+          verts[vertIndex] = new Vec2(vertices[i] / Renderer.getPPM(), vertices[i + 1] / Renderer.getPPM());
+          vertIndex++;
+        }
+
+        shape.set(verts, verts.length);
       }
-
-      shape.set(verts, verts.length);
 
       // Attach fixture
       FixtureDef fd = new FixtureDef();
@@ -188,7 +222,13 @@ public class Actor {
     // Set up pointers, and draw using our vertBuffer as before
     GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, vertBuffer);
     GLES20.glEnableVertexAttribArray(positionHandle);
-    GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, vertices.length / 3);
+
+    if(renderMode == 1) {
+      GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, vertices.length / 3);
+    } else if(renderMode == 2) {
+      GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, vertices.length / 3);
+    }
+
     GLES20.glDisableVertexAttribArray(positionHandle);
   }
 

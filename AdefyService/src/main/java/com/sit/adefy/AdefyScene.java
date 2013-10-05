@@ -19,6 +19,8 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 
 import com.sit.adefy.js.JSActorInterface;
+import com.sit.adefy.js.JSAnimationInterface;
+import com.sit.adefy.js.JSEngineInterface;
 import com.sit.adefy.objects.Actor;
 import com.sit.adefy.physics.PhysicsEngine;
 
@@ -100,11 +102,17 @@ public class AdefyScene extends Activity {
     });
 
     // Load the interface
-    web.addJavascriptInterface(new JSActorInterface(), "__iface_actor");
-    web.addJavascriptInterface(new JSActorInterface(), "__iface_actor");
+    web.addJavascriptInterface(new JSEngineInterface(), "__iface_engine");
+    web.addJavascriptInterface(new JSActorInterface(), "__iface_actors");
+    web.addJavascriptInterface(new JSAnimationInterface(), "__iface_animations");
+
+    String ifaceDef = "javascript:window.AdefyGLI = {};" +
+        "window.AdefyGLI.Engine = function(){ return window.__iface_engine; };" +
+        "window.AdefyGLI.Actors = function(){ return window.__iface_actors; };" +
+        "window.AdefyGLI.Animations = function(){ return window.__iface_animations; };";
 
     web.loadData("", "text/html", null);
-    web.loadUrl("javascript:window.AdefyGLI = {};window.AdefyGLI.Actors = function(){return window.__iface_actor;};");
+    web.loadUrl(ifaceDef);
 
     // Load our middleware
     web.loadUrl("javascript:" + getJS("adefy.js", folderName));
@@ -121,6 +129,10 @@ public class AdefyScene extends Activity {
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  public static WebView getWebView() {
+    return web;
   }
 
   private String getJS(String name, String folder) {

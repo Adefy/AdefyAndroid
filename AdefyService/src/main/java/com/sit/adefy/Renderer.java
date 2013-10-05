@@ -17,6 +17,7 @@ import org.jbox2d.common.Vec3;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import java.util.ArrayList;
+import java.util.Timer;
 
 public class Renderer implements GLSurfaceView.Renderer {
 
@@ -63,6 +64,8 @@ public class Renderer implements GLSurfaceView.Renderer {
   private static float[] projection = new float[16];
 
   public static int getShaderProg() { return shaderProg; }
+
+  public static Timer animationTimer = new Timer();
 
   @Override
   public void onSurfaceCreated(GL10 unused, EGLConfig config) {
