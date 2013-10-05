@@ -1,5 +1,9 @@
 package com.sit.adefy.objects;
 
+//
+// Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
+//
+
 import org.json.JSONException;
 import org.json.JSONObject;
 

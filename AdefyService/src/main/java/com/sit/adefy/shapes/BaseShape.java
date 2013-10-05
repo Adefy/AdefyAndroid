@@ -1,5 +1,9 @@
 package com.sit.adefy.shapes;
 
+//
+// Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
+//
+
 import com.sit.adefy.objects.Color3;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.common.Vec3;

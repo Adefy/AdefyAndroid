@@ -1,5 +1,9 @@
 package com.sit.adefy;
 
+//
+// Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
+//
+
 import android.accounts.AccountManager;
 import android.content.Context;
 import android.graphics.Point;

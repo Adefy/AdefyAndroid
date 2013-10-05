@@ -1,5 +1,9 @@
 package com.sit.adefy;
 
+//
+// Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
+//
+
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;

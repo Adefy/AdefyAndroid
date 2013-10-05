@@ -1,5 +1,9 @@
 package com.sit.adefy.shapes;
 
+//
+// Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
+//
+
 import android.graphics.Bitmap;
 import android.opengl.GLUtils;
 import android.util.Log;

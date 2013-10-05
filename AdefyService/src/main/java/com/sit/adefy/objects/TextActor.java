@@ -1,5 +1,9 @@
 package com.sit.adefy.objects;
 
+//
+// Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
+//
+
 import android.graphics.*;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.common.Vec3;

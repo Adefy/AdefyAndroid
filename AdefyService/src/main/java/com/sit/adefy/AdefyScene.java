@@ -1,5 +1,9 @@
 package com.sit.adefy;
 
+//
+// Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
+//
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -97,6 +101,8 @@ public class AdefyScene extends Activity {
 
     // Load the interface
     web.addJavascriptInterface(new JSActorInterface(), "__iface_actor");
+    web.addJavascriptInterface(new JSActorInterface(), "__iface_actor");
+
     web.loadData("", "text/html", null);
     web.loadUrl("javascript:window.AdefyGLI = {};window.AdefyGLI.Actors = function(){return window.__iface_actor;};");
 

@@ -1,5 +1,9 @@
 package com.sit.adefy.shapes;
 
+//
+// Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
+//
+
 import org.jbox2d.common.Vec2;
 
 public class XYRightTriangle extends BaseShape {

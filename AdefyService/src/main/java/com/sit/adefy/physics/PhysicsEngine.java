@@ -1,5 +1,9 @@
 package com.sit.adefy.physics;
 
+//
+// Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
+//
+
 import com.sit.adefy.Renderer;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;

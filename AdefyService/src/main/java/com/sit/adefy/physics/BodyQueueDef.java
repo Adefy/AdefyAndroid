@@ -1,5 +1,9 @@
 package com.sit.adefy.physics;
 
+//
+// Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
+//
+
 import org.jbox2d.dynamics.BodyDef;
 
 // Used for body creation

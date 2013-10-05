@@ -1,5 +1,9 @@
 package com.sit.adefy.js;
 
+//
+// Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
+//
+
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 
