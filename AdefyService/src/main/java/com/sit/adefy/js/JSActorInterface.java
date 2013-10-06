@@ -19,6 +19,7 @@ package com.sit.adefy.js;
 //   enableActorPhysics(Number mass, Number friction, Number elasticity, Number id) -> Bool success
 //   destroyPhysicsBody(Number id) -> Bool success
 
+import android.util.Log;
 import android.webkit.JavascriptInterface;
 
 import com.sit.adefy.Renderer;
@@ -52,9 +53,10 @@ public class JSActorInterface {
     for(int i = 0; i < vertsArray.length; i++) {
 
       String vert = vertsArray[i];
+
       if(i == 0) { vert = vertsArray[i].substring(1); }
       else if(i == vertsArray.length - 1) {
-        vert = vertsArray[i].substring(0, vertsArray[i].length() - 2);
+        vert = vertsArray[i].substring(0, vertsArray[i].length() - 1);
       }
 
       _verts[i] = Float.parseFloat(vert);
@@ -104,7 +106,15 @@ public class JSActorInterface {
 
     // Convert to floats
     for(int i = 0; i < vertsArray.length; i++) {
-      _verts[i] = Float.parseFloat(vertsArray[i]);
+
+      String vert = vertsArray[i];
+
+      if(i == 0) { vert = vertsArray[i].substring(1); }
+      else if(i == vertsArray.length - 1) {
+        vert = vertsArray[i].substring(0, vertsArray[i].length() - 1);
+      }
+
+      _verts[i] = Float.parseFloat(vert);
     }
 
     a.setPhysicsVertices(_verts);
@@ -123,7 +133,15 @@ public class JSActorInterface {
 
     // Convert to floats
     for(int i = 0; i < vertsArray.length; i++) {
-      _verts[i] = Float.parseFloat(vertsArray[i]);
+
+      String vert = vertsArray[i];
+
+      if(i == 0) { vert = vertsArray[i].substring(1); }
+      else if(i == vertsArray.length - 1) {
+        vert = vertsArray[i].substring(0, vertsArray[i].length() - 1);
+      }
+
+      _verts[i] = Float.parseFloat(vert);
     }
 
     a.updateVertices(_verts);
@@ -136,18 +154,19 @@ public class JSActorInterface {
     Actor a = findActor(id);
     if (a == null) { return ""; }
 
-    String ret = "[";
+    StringBuilder sb = new StringBuilder();
+    sb.append('[');
     float[] verts = a.getVertices();
 
     for(int i = 0; i < verts.length; i++) {
-      ret += verts[i];
-      if(i < verts.length - 2) { ret += ","; }
+      sb.append('"').append(verts[i]).append('"');
+      if(i < verts.length - 1) { sb.append(','); }
     }
 
-    return ret + "]";
+    sb.append(']');
+
+    return sb.toString();
   }
-
-
 
   // Set actor position using id
   // Fails with false if actor is not found
@@ -171,7 +190,7 @@ public class JSActorInterface {
     if (a == null) { return ""; }
 
     Vec2 v = a.getPosition();
-    return "{ x: " + v.x + ", y: " + v.y + " }";
+    return "{ x: \"" + v.x + "\", y: \"" + v.y + "\" }";
   }
 
   // Set actor rotation in radians, fails with false if the actor is not found
@@ -224,7 +243,7 @@ public class JSActorInterface {
     Actor a = findActor(id);
     if (a == null) { return ""; }
 
-    return "{ r: " + a.color.r + ", g: " + a.color.g + ", b: " + a.color.b + " }";
+    return "{ r: \"" + a.color.r + "\", g: \"" + a.color.g + "\", b: \"" + a.color.b + "\" }";
   }
 
   // Enable actor physics using id, fails with false if actor is not found

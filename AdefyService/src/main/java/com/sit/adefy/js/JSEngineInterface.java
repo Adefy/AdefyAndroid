@@ -4,6 +4,7 @@ package com.sit.adefy.js;
 // Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
 //
 
+import android.util.Log;
 import android.webkit.JavascriptInterface;
 
 import com.sit.adefy.Renderer;
@@ -16,10 +17,11 @@ public class JSEngineInterface {
   }
 
   @JavascriptInterface
-  public void setClearColor(int r, int g, int b) {
-    Renderer.clearColor.x = r;
-    Renderer.clearColor.y = g;
-    Renderer.clearColor.z = b;
+  public void setClearColor(float r, float g, float b) {
+
+    Renderer.clearColor.x = r / 255.0f;
+    Renderer.clearColor.y = g / 255.0f;
+    Renderer.clearColor.z = b / 255.0f;
   }
 
   @JavascriptInterface

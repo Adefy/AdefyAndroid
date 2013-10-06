@@ -24,6 +24,7 @@ import javax.microedition.khronos.opengles.GL10;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Actor {
@@ -88,6 +89,24 @@ public class Actor {
       destroyPhysicsBody();
       createPhysicsBody(density, friction, restitution);
     }
+  }
+
+  public void updateVertices(ArrayList<Float> _vertices) {
+
+    this.vertices = new float[(int)(_vertices.size() * 1.5f)];
+
+    // Add z coord of 1
+    int set = 0;
+    for(int i = 0; i < this.vertices.length; i += 3) {
+      this.vertices[i] = _vertices.get(set);
+      this.vertices[i + 1] = _vertices.get(set + 1);
+      this.vertices[i + 2] = 1;
+
+      set += 2;
+    }
+
+    // Rebuild buffers
+    refreshVertBuffer();
   }
 
   public void updateVertices(float[] _vertices) {
@@ -266,6 +285,20 @@ public class Actor {
     }
   }
 
-  public float[] getVertices() { return vertices; }
+  public float[] getVertices() {
+
+    float[] ret = new float[(vertices.length / 3) * 2];
+
+    int set = 0;
+    for(int i = 0; i < vertices.length; i+= 3) {
+      ret[set] = vertices[i];
+      ret[set + 1] = vertices[i + 1];
+
+      set += 2;
+    }
+
+    return ret;
+  }
+
   public int getId() { return id; }
 }

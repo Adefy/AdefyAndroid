@@ -1,5 +1,9 @@
 package com.sit.adefy.animations;
 
+//
+// Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
+//
+
 import android.util.Log;
 
 import com.sit.adefy.AdefyScene;
@@ -8,6 +12,7 @@ import com.sit.adefy.objects.Actor;
 
 import org.jbox2d.common.Vec2;
 
+import java.util.Arrays;
 import java.util.TimerTask;
 
 /*
@@ -41,6 +46,17 @@ public class BezAnimation {
       Vec2 controlPoints[],
       float duration,
       String property[],
+      int fps
+  ) {
+    this(actor, endVal, controlPoints, duration, property, fps, "", "", "");
+  }
+
+  public BezAnimation(
+      Actor actor,
+      float endVal,
+      Vec2 controlPoints[],
+      float duration,
+      String property[],
       int fps,
       String cbStart,
       String cbEnd,
@@ -58,17 +74,20 @@ public class BezAnimation {
     this.cbEnd = cbEnd;
     this.cbStep = cbStep;
 
-    validate();
-    getStartValue();
+    if(property != null) { validate(); }
 
     tIncr = 1 / (duration * ((float)fps / 1000.0f));
   }
 
+  // Used by the animation interface to direct properties we support to us
   static public boolean canAnimate(String[] property) {
+    return canAnimate(property[0]);
+  }
+  static public boolean canAnimate(String property) {
 
-    if(property[0].equals("position")) { return true; }
-    else if(property[0].equals("color")) { return true; }
-    else if(property[0].equals("rotation")) { return true; }
+    if(property.equals("position")) { return true; }
+    else if(property.equals("color")) { return true; }
+    else if(property.equals("rotation")) { return true; }
 
     return false;
   }
@@ -167,8 +186,40 @@ public class BezAnimation {
     return val;
   }
 
+  // Go through and calculate values for each step, and return the result as a JSON array
+  public String preCalculate(float _startVal) {
+
+    StringBuilder sb = new StringBuilder();
+    sb.append("{ \"stepTime\": ").append(duration * tIncr).append(", \"values\": [");
+
+    float origStartVal = startVal;
+    startVal = _startVal;
+
+    float t = 0;
+    int i = 0;
+
+    while(t < 1) {
+      sb.append('"').append(update(t, false)).append('"');
+      if(t + tIncr < 1) { sb.append(","); }
+
+      t += tIncr;
+      i++;
+    }
+
+    sb.append("]}");
+
+    startVal = origStartVal;
+
+    return sb.toString();
+  }
+
   // Applies a value to our designated property on our actor
   private void applyValue(float val) {
+
+    if(actor == null) {
+      Log.w("BezAnimation", "Can't apply value, no actor specified");
+      return;
+    }
 
     synchronized (actor) {
 
@@ -194,9 +245,13 @@ public class BezAnimation {
   public void animate(long start) {
     if(animated) { return; } else { animated = true; }
     if(start < 0) { start = 0; }
+    if(actor == null) {
+      Log.w("BezAnimation", "Can't animate, no actor specified. Did you mean to preCalculate?");
+      return;
+    }
 
     if(cbStart.length() > 0) {
-      AdefyScene.getWebView().loadUrl("javascript:" + cbStart);
+      AdefyScene.getWebView().loadUrl("javascript:" + cbStart + "();");
     }
 
     final float[] t = new float[1];
@@ -204,21 +259,28 @@ public class BezAnimation {
 
     Renderer.animationTimer.scheduleAtFixedRate(new TimerTask() {
 
+      private boolean firstRun = true;
+
       @Override
       public void run() {
         t[0] += tIncr;
+
+        if(firstRun) {
+          getStartValue();
+          firstRun = false;
+        }
 
         if(t[0] > 1) {
           cancel();
 
           if(cbEnd.length() > 0) {
-            AdefyScene.getWebView().loadUrl("javascript:" + cbEnd);
+            AdefyScene.getWebView().loadUrl("javascript:" + cbEnd + "();");
           }
         } else {
-          update(t[0]);
+          float val = update(t[0]);
 
           if(cbStep.length() > 0) {
-            AdefyScene.getWebView().loadUrl("javascript:" + cbStep);
+            AdefyScene.getWebView().loadUrl("javascript:" + cbStep + "(" + val + ");");
           }
         }
       }
