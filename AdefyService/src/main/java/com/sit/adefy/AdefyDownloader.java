@@ -108,8 +108,6 @@ public class AdefyDownloader {
 
   private HttpsURLConnection establishConnection() throws NoSuchAlgorithmException, KeyManagementException, IOException, JSONException {
 
-    Log.v("Adefy", "Attempting to connect to server...");
-
     SSLContext sslctx = SSLContext.getInstance("SSL");
     sslctx.init(null, new X509TrustManager[]{new TrustingTrustManager()}, new SecureRandom());
     HttpsURLConnection.setDefaultSSLSocketFactory(sslctx.getSocketFactory());
@@ -141,14 +139,10 @@ public class AdefyDownloader {
 
     con.connect();
 
-    Log.v("Adefy", "Connected to server, response length " + con.getContentLength());
-
     return con;
   }
 
   private void downloadArchive(String path, HttpsURLConnection con) throws IOException {
-
-    Log.v("Adefy", "Requesting archive " + ctx.getCacheDir() + "/" + path);
 
     // Create file in our cache
     File tempArchive = File.createTempFile(path, ".zip", ctx.getCacheDir());
@@ -169,7 +163,6 @@ public class AdefyDownloader {
     out.close();
     input.close();
 
-    Log.v("Adefy", "Full fname: " + tempArchive.getAbsolutePath());
     tempArchive.renameTo(new File(ctx.getCacheDir() + "/" + path + ".zip"));
   }
 
@@ -182,8 +175,6 @@ public class AdefyDownloader {
 
     // Operate on each entry
     while((ze = zin.getNextEntry()) != null) {
-
-      Log.v("Adefy", "Decompressing downloaded ad resources " + ze.getName() + "->" + ctx.getCacheDir() + "/" + dir + "/" + ze.getName());
 
       if(ze.isDirectory()) {
         File dirCheck = new File(ctx.getCacheDir() + "/" + dir + "/" + ze.getName());
