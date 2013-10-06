@@ -72,6 +72,7 @@ public class AdefyScene extends Activity {
     String jsonText = "";
     BufferedReader br = null;
     String texturesPath = "";
+
     try {
       br = new BufferedReader(new FileReader(jsonFile.toString()));
       String crtLine;
@@ -136,21 +137,24 @@ public class AdefyScene extends Activity {
   }
 
   private String getJS(String name, String folder) {
-    File jsFile = new File(this.getCacheDir() + "/" + folder + "/" + name);
-    String js = "";
-    String line;
-    BufferedReader br = null;
 
     try {
 
-      br = new BufferedReader(new FileReader(jsFile.toString()));
-      while((line = br.readLine()) != null) { js += line; }
+      File jsFile = new File(this.getCacheDir() + "/" + folder + "/" + name);
+      BufferedReader br = new BufferedReader(new FileReader(jsFile.toString()));
+      StringBuilder sb = new StringBuilder();
+      String line;
+
+      while((line = br.readLine()) != null) {
+        sb.append(line);
+      }
+
+      return sb.toString();
 
     } catch (Exception e) {
       e.printStackTrace();
+      return "";
     }
-
-    return js;
   }
 
   public void refreshTextures(String folderName)  {
@@ -184,42 +188,6 @@ public class AdefyScene extends Activity {
     }
 
     Log.v("Adefy", "Loaded " + textures.size() + " into GL memory");
-  }
-
-  public void unzipArchive(String path, String dir) throws IOException {
-
-    // Get streams
-    FileInputStream fin = new FileInputStream(this.getCacheDir() + "/" + path);
-    ZipInputStream zin = new ZipInputStream(fin);
-    ZipEntry ze;
-
-    // Operate on each entry
-    while((ze = zin.getNextEntry()) != null) {
-
-      Log.v("Adefy", "Decompressing downloaded ad resources " + ze.getName() + "->" + this.getCacheDir() + "/" + dir + "/" + ze.getName());
-
-      if(ze.isDirectory()) {
-        File dirCheck = new File(this.getCacheDir() + "/" + dir + "/" + ze.getName());
-
-        // Create directory if necessary
-        dirCheck.mkdirs(); // TODO: Fix
-      } else {
-
-        // Write file
-        File fout_dirCreation = new File(this.getCacheDir() + "/" + dir);
-        fout_dirCreation.mkdirs();
-
-        FileOutputStream fout = new FileOutputStream(this.getCacheDir() + "/" + dir + "/" + ze.getName());
-
-        int c;
-        while((c = zin.read()) != -1) {
-          fout.write(c);
-        }
-
-        zin.closeEntry();
-        fout.close();
-      }
-    }
   }
 
   public static PhysicsEngine getPhysicsEngine() { return psyx; }

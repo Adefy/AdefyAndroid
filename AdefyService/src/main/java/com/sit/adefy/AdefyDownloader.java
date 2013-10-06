@@ -173,9 +173,6 @@ public class AdefyDownloader {
     tempArchive.renameTo(new File(ctx.getCacheDir() + "/" + path + ".zip"));
   }
 
-
-  // TODO: Move this to AdefyScene, let it handle unzipping
-
   public void unzipArchive(String path, String dir) throws IOException {
 
     // Get streams
@@ -201,9 +198,11 @@ public class AdefyDownloader {
 
         FileOutputStream fout = new FileOutputStream(ctx.getCacheDir() + "/" + dir + "/" + ze.getName());
 
-        int c;
-        while((c = zin.read()) != -1) {
-          fout.write(c);
+        byte data[] = new byte[1024];
+        int count;
+
+        while((count = zin.read(data, 0, 1024)) != -1) {
+          fout.write(data, 0, count);
         }
 
         zin.closeEntry();
