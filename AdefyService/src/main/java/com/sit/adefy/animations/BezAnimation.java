@@ -9,6 +9,7 @@ import android.util.Log;
 import com.sit.adefy.AdefyScene;
 import com.sit.adefy.Renderer;
 import com.sit.adefy.objects.Actor;
+import com.sit.adefy.objects.Color3;
 
 import org.jbox2d.common.Vec2;
 
@@ -133,9 +134,9 @@ public class BezAnimation {
       if(property[1].equals("x")) { startVal = actor.getPosition().x; }
       else if(property[1].equals("y")) { startVal = actor.getPosition().y; }
     } else if(property[0].equals("color")) {
-      if(property[1].equals("r")) { startVal = actor.color.r; }
-      else if(property[1].equals("g")) { startVal = actor.color.g; }
-      else if(property[1].equals("b")) { startVal = actor.color.b; }
+      if(property[1].equals("r")) { startVal = actor.getColor().r; }
+      else if(property[1].equals("g")) { startVal = actor.getColor().g; }
+      else if(property[1].equals("b")) { startVal = actor.getColor().b; }
     }
   }
 
@@ -233,9 +234,14 @@ public class BezAnimation {
 
         actor.setPosition(pos);
       } else if(property[0].equals("color")) {
-        if(property[1].equals("r")) { actor.color.r = (int)Math.floor(val); }
-        else if(property[1].equals("g")) { actor.color.g = (int)Math.floor(val); }
-        else if(property[1].equals("b")) { actor.color.b = (int)Math.floor(val); }
+
+        Color3 col = actor.getColor();
+
+        if(property[1].equals("r")) { col.r = (int)Math.floor(val); }
+        else if(property[1].equals("g")) { col.g = (int)Math.floor(val); }
+        else if(property[1].equals("b")) { col.b = (int)Math.floor(val); }
+
+        actor.setColor(col);
       }
     }
   }

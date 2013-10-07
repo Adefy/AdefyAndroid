@@ -24,6 +24,7 @@ import android.webkit.JavascriptInterface;
 
 import com.sit.adefy.Renderer;
 import com.sit.adefy.objects.Actor;
+import com.sit.adefy.objects.Color3;
 
 import org.jbox2d.common.Vec2;
 
@@ -230,9 +231,7 @@ public class JSActorInterface {
     Actor a = findActor(id);
     if (a == null) { return false; }
 
-    a.color.r = r;
-    a.color.g = g;
-    a.color.b = b;
+    a.setColor(new Color3(r, g, b));
 
     return true;
   }
@@ -243,7 +242,12 @@ public class JSActorInterface {
     Actor a = findActor(id);
     if (a == null) { return ""; }
 
-    return "{ r: \"" + a.color.r + "\", g: \"" + a.color.g + "\", b: \"" + a.color.b + "\" }";
+    Color3 col = a.getColor();
+    if(col == null) {
+      return "{ r: \"255\", g: \"255\", b: \"255\" }";
+    } else {
+      return "{ r: \"" + col.r + "\", g: \"" + col.g + "\", b: \"" + col.b + "\" }";
+    }
   }
 
   // Enable actor physics using id, fails with false if actor is not found

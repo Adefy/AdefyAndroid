@@ -8,6 +8,9 @@ import android.util.Log;
 import android.webkit.JavascriptInterface;
 
 import com.sit.adefy.Renderer;
+import com.sit.adefy.objects.Color3;
+
+import org.jbox2d.common.Vec3;
 
 public class JSEngineInterface {
 
@@ -18,15 +21,15 @@ public class JSEngineInterface {
 
   @JavascriptInterface
   public void setClearColor(float r, float g, float b) {
-
-    Renderer.clearColor.x = r / 255.0f;
-    Renderer.clearColor.y = g / 255.0f;
-    Renderer.clearColor.z = b / 255.0f;
+    Renderer.clearCol.x = r / 255.0f;
+    Renderer.clearCol.y = g / 255.0f;
+    Renderer.clearCol.z = b / 255.0f;
   }
 
   @JavascriptInterface
   public String getClearColor() {
-    return "{ r: " + Renderer.clearColor.x + ", g: " + Renderer.clearColor.y + ", b: " + Renderer.clearColor.z + " }";
+    Vec3 col = Renderer.clearCol;
+    return "{ r: " + col.x + ", g: " + col.y + ", b: " + col.z + " }";
   }
 
   @JavascriptInterface

@@ -9,6 +9,8 @@ import android.opengl.Matrix;
 import android.util.Log;
 
 import com.sit.adefy.Renderer;
+import com.sit.adefy.materials.Material;
+import com.sit.adefy.materials.SingleColorMaterial;
 import com.sit.adefy.physics.BodyQueueDef;
 import com.sit.adefy.physics.PhysicsEngine;
 import org.jbox2d.collision.shapes.PolygonShape;
@@ -40,10 +42,10 @@ public class Actor {
   protected int[] texture = new int[1];
   protected float psyxVertices[] = null;
 
+  private float[] modelView = new float[16];
+
   protected Vec2 position = new Vec2(0.0f, 0.0f);
   protected float rotation = 0.0f;
-
-  public Color3 color = new Color3(255, 255, 255);
 
   public boolean lit = false;
   public boolean visible = true;
@@ -53,6 +55,8 @@ public class Actor {
   private float density;
   private float restitution;
 
+  private Material material;
+
   public int renderMode = 2;
 
   public Actor(int _id, float[] _vertices) {
@@ -61,12 +65,42 @@ public class Actor {
     // Build initial actor
     updateVertices(_vertices);
 
+    // Start out with solid material
+    material = new SingleColorMaterial();
+
     Renderer.actors.add(this);
   }
 
   public void setPhysicsVertices(float[] verts) {
     this.psyxVertices = verts;
     refreshVertBuffer();
+  }
+
+  // Update material color if possible
+  public void setColor(Color3 color) {
+    if(material.getName().equals(SingleColorMaterial.name)) {
+      ((SingleColorMaterial)material).setColor(color);
+    }
+  }
+
+  public Color3 getColor() {
+    if(material.getName().equals(SingleColorMaterial.name)) {
+      return ((SingleColorMaterial)material).getColor();
+    }
+
+    return null;
+  }
+
+  public void setMaterial(Material material) {
+    this.material = material;
+  }
+
+  public Material getMaterial() {
+    return material;
+  }
+
+  public String getMaterialName() {
+    return material.getName();
   }
 
   public void destroy() {
@@ -91,6 +125,7 @@ public class Actor {
     }
   }
 
+  // Rebuild our vertices using a list
   public void updateVertices(ArrayList<Float> _vertices) {
 
     this.vertices = new float[(int)(_vertices.size() * 1.5f)];
@@ -109,6 +144,7 @@ public class Actor {
     refreshVertBuffer();
   }
 
+  // Rebuild our vertices using a flat array
   public void updateVertices(float[] _vertices) {
 
     this.vertices = new float[(int)(_vertices.length * 1.5f)];
@@ -209,11 +245,6 @@ public class Actor {
   }
 
   public void draw() {
-
-    int positionHandle = GLES20.glGetAttribLocation(Renderer.getShaderProg(), "Position");
-    int colorHandle = GLES20.glGetUniformLocation(Renderer.getShaderProg(), "Color");
-    int modelHandle = GLES20.glGetUniformLocation(Renderer.getShaderProg(), "ModelView");
-
     if(!visible) { return; }
 
     // Update local data from physics engine, if applicable
@@ -222,33 +253,15 @@ public class Actor {
       rotation = body.getAngle() * 57.2957795786f;
     }
 
-    // Construct mvp to be applied to every vertex
-    float[] modelView = new float[16];
-
-    // Equivalent of gl.glLoadIdentity()
     Matrix.setIdentityM(modelView, 0);
-
-    // gl.glTranslatef()
     Matrix.translateM(modelView, 0, position.x, position.y, 1.0f);
-
-    // gl.glRotatef()
     Matrix.rotateM(modelView, 0, rotation, 0, 0, 1.0f);
 
-    // Load our matrix and color into our shader
-    GLES20.glUniformMatrix4fv(modelHandle, 1, false, modelView, 0);
-    GLES20.glUniform4fv(colorHandle, 1, color.toFloatArray(), 0);
-
-    // Set up pointers, and draw using our vertBuffer as before
-    GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, vertBuffer);
-    GLES20.glEnableVertexAttribArray(positionHandle);
-
     if(renderMode == 1) {
-      GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, vertices.length / 3);
+      material.draw(vertBuffer, vertices.length / 3, GLES20.GL_TRIANGLE_STRIP, modelView);
     } else if(renderMode == 2) {
-      GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, vertices.length / 3);
+      material.draw(vertBuffer, vertices.length / 3, GLES20.GL_TRIANGLE_FAN, modelView);
     }
-
-    GLES20.glDisableVertexAttribArray(positionHandle);
   }
 
   // Modify the actor or the body
