@@ -13,8 +13,10 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.webkit.ConsoleMessage;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 
@@ -53,10 +55,14 @@ public class AdefyScene extends Activity {
   private JSONArray textureArray = new JSONArray();
   private static ArrayList<TextureDescriptor> textures = new ArrayList<TextureDescriptor>();
 
+  private static String adFolderName;
+  private static AdefyScene me = null;
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
+    me = this;
     renderer = new Renderer();
     psyx = new PhysicsEngine();
 
@@ -67,8 +73,8 @@ public class AdefyScene extends Activity {
     setContentView(mView);
 
     Intent launchedIntent = getIntent();
-    String folderName = launchedIntent.getStringExtra("folder"); //should be adefyFolder
-    File jsonFile = new File(this.getCacheDir() + "/" + folderName + "/package.json");
+    adFolderName = launchedIntent.getStringExtra("folder");
+    File jsonFile = new File(this.getCacheDir() + "/" + adFolderName + "/package.json");
     String jsonText = "";
     BufferedReader br = null;
     String texturesPath = "";
@@ -102,33 +108,68 @@ public class AdefyScene extends Activity {
       }
     });
 
-    // Load the interface
+    // Load the initial interface
+    web.addJavascriptInterface(new WebViewLoadNotify(), "__iface_load");
+
+    // Set up actual Adefy interfaces
     web.addJavascriptInterface(new JSEngineInterface(), "__iface_engine");
     web.addJavascriptInterface(new JSActorInterface(), "__iface_actors");
     web.addJavascriptInterface(new JSAnimationInterface(), "__iface_animations");
 
-    String ifaceDef = "javascript:window.AdefyGLI = {};" +
+    // Calls our load interface
+    String loadJS = "" +
+        "javascript:(function(){" +
+          "window.onload=function(){" +
+            "__iface_load.onLoad();" +
+          "};" +
+        "})()";
+
+    // Inject!
+    web.loadData("", "text/html", null);
+    web.loadUrl(loadJS);
+  }
+
+  final Handler onLoadHandler = new Handler();
+  final Runnable onLoadRunnable = new Runnable() {
+
+    @Override
+    public void run() {
+      me.executeOnLoad();
+    }
+  };
+
+  private void executeOnLoad() {
+
+    String ifaceDef = "" +
+        "window.AdefyGLI = {};" +
         "window.AdefyGLI.Engine = function(){ return window.__iface_engine; };" +
         "window.AdefyGLI.Actors = function(){ return window.__iface_actors; };" +
         "window.AdefyGLI.Animations = function(){ return window.__iface_animations; };";
 
-    web.loadData("", "text/html", null);
-    web.loadUrl(ifaceDef);
-
-    // Load our middleware
-    web.loadUrl("javascript:" + getJS("adefy.js", folderName));
-
     try {
+
+      // Load AdefyJS
+      String scene = getJS("adefy.js", adFolderName);
+      scene += getJS(jsonObj.getJSONObject("scenes").getString("1"), adFolderName);
 
       // TODO: We are executing arbitrary JS, preform some security checks!
 
-      // Run the first scene to test
-      String scene = getJS(jsonObj.getJSONObject("scenes").getString("1"), folderName);
-      web.loadUrl("javascript:" + scene);
-      web.loadUrl("javascript:scene();");
+      // Execute the sent scene
+      web.loadUrl("javascript:(function(){" + ifaceDef + scene + "})()");
 
     } catch (Exception e) {
       e.printStackTrace();
+    }
+  }
+
+  // We move the code into a class that exposes a JS interface, which gets called
+  // on the window onload() event. This then loads up our stuff.
+  private final class WebViewLoadNotify {
+
+    @JavascriptInterface
+    public void onLoad() {
+
+      onLoadHandler.post(onLoadRunnable);
     }
   }
 
@@ -142,11 +183,13 @@ public class AdefyScene extends Activity {
 
       File jsFile = new File(this.getCacheDir() + "/" + folder + "/" + name);
       BufferedReader br = new BufferedReader(new FileReader(jsFile.toString()));
-      StringBuilder sb = new StringBuilder();
-      String line;
+      StringBuilder sb = new StringBuilder((int)jsFile.length());
 
-      while((line = br.readLine()) != null) {
-        sb.append(line);
+      char[] buffer = new char[2048];
+      int count;
+
+      while((count = br.read(buffer, 0, 2048)) >= 0) {
+        sb.append(new String(buffer, 0, count));
       }
 
       return sb.toString();
