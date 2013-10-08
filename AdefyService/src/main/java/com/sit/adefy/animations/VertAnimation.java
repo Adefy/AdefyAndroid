@@ -6,12 +6,11 @@ package com.sit.adefy.animations;
 
 import android.util.Log;
 
+import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.AdefyScene;
-import com.sit.adefy.Renderer;
 import com.sit.adefy.objects.Actor;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.TimerTask;
 
 /*
@@ -145,7 +144,7 @@ public class VertAnimation {
     if(start < 0) { start = 0; }
 
     if(cbStart.length() > 0) {
-      AdefyScene.getWebView().loadUrl("javascript:" + cbStart + "();");
+      //AdefyScene.getWebView().loadUrl("javascript:" + cbStart + "();");
     }
 
     final int[] nextDSet = new int[1];
@@ -153,7 +152,7 @@ public class VertAnimation {
 
     for (int delay : delays) {
 
-      Renderer.animationTimer.schedule(new TimerTask() {
+      AdefyRenderer.animationTimer.schedule(new TimerTask() {
 
         @Override
         public void run() {
@@ -171,12 +170,12 @@ public class VertAnimation {
               }
             }
 
-            AdefyScene.getWebView().loadUrl("javascript:" + cbStep + "(" + userData + ");");
+            //AdefyScene.getWebView().loadUrl("javascript:" + cbStep + "(" + userData + ");");
           }
 
           // Call end callback if necessary
           if (nextDSet[0] == delays[delays.length - 1] && cbEnd.length() > 0) {
-            AdefyScene.getWebView().loadUrl("javascript:" + cbEnd + "();");
+            //AdefyScene.getWebView().loadUrl("javascript:" + cbEnd + "();");
           }
 
           nextDSet[0]++;

@@ -19,10 +19,9 @@ package com.sit.adefy.js;
 //   enableActorPhysics(Number mass, Number friction, Number elasticity, Number id) -> Bool success
 //   destroyPhysicsBody(Number id) -> Bool success
 
-import android.util.Log;
 import android.webkit.JavascriptInterface;
 
-import com.sit.adefy.Renderer;
+import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.objects.Actor;
 import com.sit.adefy.objects.Color3;
 
@@ -35,7 +34,7 @@ public class JSActorInterface {
   private int getNextID() { return nextID++; }
 
   private Actor findActor(int id) {
-    for(Actor a : Renderer.actors) {
+    for(Actor a : AdefyRenderer.actors) {
       if(a.getId() == id) { return a; }
     }
 

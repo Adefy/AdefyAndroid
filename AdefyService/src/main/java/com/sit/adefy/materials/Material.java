@@ -4,10 +4,6 @@ package com.sit.adefy.materials;
 // Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
 //
 
-import android.util.Log;
-
-import com.sit.adefy.Renderer;
-
 import java.nio.FloatBuffer;
 
 // Base material

@@ -42,8 +42,11 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.X509TrustManager;
 
-// This class replaces the service, offers functions to manually download ad
-// packages
+/*
+  This class is responsible for gathering user data, and sending it to the Adefy servers
+  to request an ad. Ads are packaged in zip files, and include a manifest, the AdefyJS library,
+  necessary textures, and the scene itself.
+ */
 public class AdefyDownloader {
 
   // TODO: Make this private! It's only public for testing
@@ -51,33 +54,55 @@ public class AdefyDownloader {
   private UserInformation uInfo;
   private Context ctx;
   private String APIKey;
-  private String paths = "";
+  private String downloadPath;
 
+  // TODO: Remove this!
+  private String adId = null;
+
+  // Gathers initial device information, packages it in a string ready to send to the server.
   public AdefyDownloader(Context _ctx, String _apikey) {
     this.ctx = _ctx;
     this.APIKey = _apikey;
 
+    StringBuilder sb = new StringBuilder();
+    String charSpace = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    for(int i = 0; i <  16; i++) {
+      sb.append(charSpace.charAt((int)Math.floor(Math.random() * charSpace.length())));
+    }
+
+    downloadPath = sb.toString();
+
     gatherUserInformation();
   }
 
-  // TODO: Add error returns
-  public void fetchAd(String zipName) {
-
-    // TODO: Do something else
+  // Contacts the server, sends userinfo, and expects to receive an ad.
+  //
+  // Returns success
+  public boolean fetchAd(String folder) { return fetchAd(folder, null); }
+  public boolean fetchAd(String folder, String id) {
     if(!isNetworkAvaliable()) {
-      return;
+
+      Log.e("Adefy", "Can't fetch ad, network not avaliable!");
+      return false;
     }
 
-    // TODO: Consider better handling
+    if(id != null) { adId = id; }
+
     try {
-      downloadArchive(zipName,  establishConnection());
+
+      downloadArchive(establishConnection());
+      unzipArchive(downloadPath + ".ttx", folder);
+      return true;
+
     } catch (Exception e) {
+
       e.printStackTrace();
+      return false;
     }
   }
 
-  // Initially, the device is profiled if not already done, and the
-  // information is prepared to be sent to the Adefy servers
+  // Device UUID, the username, and the screen size is harvested.
   private void gatherUserInformation() {
 
     // Get display size
@@ -125,6 +150,11 @@ public class AdefyDownloader {
 
     String content = "apikey=" + APIKey + "&uinfo=" + uInfo.toJSONString();
 
+    // TODO: Remove
+    if(adId != null) {
+      content += "&id=" + adId;
+    }
+
     con.setRequestProperty("Content-Length", Integer.toString(content.length()));
     con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
@@ -142,10 +172,10 @@ public class AdefyDownloader {
     return con;
   }
 
-  private void downloadArchive(String path, HttpsURLConnection con) throws IOException {
+  private void downloadArchive(HttpsURLConnection con) throws IOException {
 
     // Create file in our cache
-    File tempArchive = File.createTempFile(path, ".zip", ctx.getCacheDir());
+    File tempArchive = File.createTempFile(downloadPath, ".ttx", ctx.getCacheDir());
 
     // Download!
     InputStream input = con.getInputStream();
@@ -155,7 +185,7 @@ public class AdefyDownloader {
     int count;
 
     // Write data
-    while((count = input.read(data)) != -1) {
+    while((count = input.read(data, 0, 1024)) != -1) {
       out.write(data, 0, count);
     }
 
@@ -163,7 +193,7 @@ public class AdefyDownloader {
     out.close();
     input.close();
 
-    tempArchive.renameTo(new File(ctx.getCacheDir() + "/" + path + ".zip"));
+    tempArchive.renameTo(new File(ctx.getCacheDir() + "/" + downloadPath + ".ttx"));
   }
 
   public void unzipArchive(String path, String dir) throws IOException {
@@ -176,29 +206,21 @@ public class AdefyDownloader {
     // Operate on each entry
     while((ze = zin.getNextEntry()) != null) {
 
-      if(ze.isDirectory()) {
-        File dirCheck = new File(ctx.getCacheDir() + "/" + dir + "/" + ze.getName());
+      // Write file
+      File fout_dirCreation = new File(ctx.getCacheDir() + "/" + dir);
+      fout_dirCreation.mkdirs();
 
-        // Create directory if necessary
-        dirCheck.mkdirs(); // TODO: Fix
-      } else {
+      FileOutputStream fout = new FileOutputStream(ctx.getCacheDir() + "/" + dir + "/" + ze.getName());
 
-        // Write file
-        File fout_dirCreation = new File(ctx.getCacheDir() + "/" + dir);
-        fout_dirCreation.mkdirs();
+      byte data[] = new byte[1024];
+      int count;
 
-        FileOutputStream fout = new FileOutputStream(ctx.getCacheDir() + "/" + dir + "/" + ze.getName());
-
-        byte data[] = new byte[1024];
-        int count;
-
-        while((count = zin.read(data, 0, 1024)) != -1) {
-          fout.write(data, 0, count);
-        }
-
-        zin.closeEntry();
-        fout.close();
+      while((count = zin.read(data, 0, 1024)) != -1) {
+        fout.write(data, 0, count);
       }
+
+      zin.closeEntry();
+      fout.close();
     }
   }
 

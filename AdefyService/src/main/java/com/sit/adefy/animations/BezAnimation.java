@@ -6,14 +6,13 @@ package com.sit.adefy.animations;
 
 import android.util.Log;
 
+import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.AdefyScene;
-import com.sit.adefy.Renderer;
 import com.sit.adefy.objects.Actor;
 import com.sit.adefy.objects.Color3;
 
 import org.jbox2d.common.Vec2;
 
-import java.util.Arrays;
 import java.util.TimerTask;
 
 /*
@@ -257,13 +256,13 @@ public class BezAnimation {
     }
 
     if(cbStart.length() > 0) {
-      AdefyScene.getWebView().loadUrl("javascript:" + cbStart + "();");
+      //AdefyScene.getWebView().loadUrl("javascript:" + cbStart + "();");
     }
 
     final float[] t = new float[1];
     t[0] = -tIncr;
 
-    Renderer.animationTimer.scheduleAtFixedRate(new TimerTask() {
+    AdefyRenderer.animationTimer.scheduleAtFixedRate(new TimerTask() {
 
       private boolean firstRun = true;
 
@@ -280,13 +279,13 @@ public class BezAnimation {
           cancel();
 
           if(cbEnd.length() > 0) {
-            AdefyScene.getWebView().loadUrl("javascript:" + cbEnd + "();");
+            //AdefyScene.getWebView().loadUrl("javascript:" + cbEnd + "();");
           }
         } else {
           float val = update(t[0]);
 
           if(cbStep.length() > 0) {
-            AdefyScene.getWebView().loadUrl("javascript:" + cbStep + "(" + val + ");");
+            //AdefyScene.getWebView().loadUrl("javascript:" + cbStep + "(" + val + ");");
           }
         }
       }

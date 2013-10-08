@@ -4,7 +4,8 @@ package com.sit.adefy.physics;
 // Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
 //
 
-import com.sit.adefy.Renderer;
+import com.sit.adefy.AdefyRenderer;
+
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.World;
@@ -115,7 +116,7 @@ public class PhysicsEngine {
 
             // Handle creations
             for (BodyQueueDef bq : bodyCreateQ) {
-              Renderer.actors.get(bq.getActorID()).onBodyCreation(physicsWorld.createBody(bq.getBd()));
+              AdefyRenderer.actors.get(bq.getActorID()).onBodyCreation(physicsWorld.createBody(bq.getBd()));
             }
 
             bodyCreateQ.clear();

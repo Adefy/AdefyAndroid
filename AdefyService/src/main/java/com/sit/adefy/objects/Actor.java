@@ -6,28 +6,23 @@ package com.sit.adefy.objects;
 
 import android.opengl.GLES20;
 import android.opengl.Matrix;
-import android.util.Log;
 
-import com.sit.adefy.Renderer;
+import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.materials.Material;
 import com.sit.adefy.materials.SingleColorMaterial;
 import com.sit.adefy.physics.BodyQueueDef;
 import com.sit.adefy.physics.PhysicsEngine;
 import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Vec2;
-import org.jbox2d.common.Vec3;
 import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.BodyDef;
 import org.jbox2d.dynamics.BodyType;
 import org.jbox2d.dynamics.FixtureDef;
-import org.json.JSONArray;
 
-import javax.microedition.khronos.opengles.GL10;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class Actor {
 
@@ -68,7 +63,7 @@ public class Actor {
     // Start out with solid material
     material = new SingleColorMaterial();
 
-    Renderer.actors.add(this);
+    AdefyRenderer.actors.add(this);
   }
 
   public void setPhysicsVertices(float[] verts) {
@@ -106,7 +101,7 @@ public class Actor {
   public void destroy() {
 
     if(body != null) { destroyPhysicsBody(); }
-    Renderer.actors.remove(this);
+    AdefyRenderer.actors.remove(this);
   }
 
   // Refreshes the internal vertex buffer
@@ -182,7 +177,7 @@ public class Actor {
       bd.type = BodyType.STATIC;
     }
 
-    bd.position = Renderer.screenToWorld(position);
+    bd.position = AdefyRenderer.screenToWorld(position);
 
     // Add to physics world body creation queue, will be finalized when possible
     PhysicsEngine.requestBodyCreation(new BodyQueueDef(id, bd));
@@ -206,7 +201,7 @@ public class Actor {
 
         int vertIndex = 0;
         for(int i = 0; i < psyxVertices.length; i += 2) {
-          verts[vertIndex] = new Vec2(psyxVertices[i] / Renderer.getPPM(), psyxVertices[i + 1] / Renderer.getPPM());
+          verts[vertIndex] = new Vec2(psyxVertices[i] / AdefyRenderer.getPPM(), psyxVertices[i + 1] / AdefyRenderer.getPPM());
           vertIndex++;
         }
 
@@ -217,7 +212,7 @@ public class Actor {
 
         int vertIndex = 0;
         for(int i = 0; i < vertices.length; i += 3) {
-          verts[vertIndex] = new Vec2(vertices[i] / Renderer.getPPM(), vertices[i + 1] / Renderer.getPPM());
+          verts[vertIndex] = new Vec2(vertices[i] / AdefyRenderer.getPPM(), vertices[i + 1] / AdefyRenderer.getPPM());
           vertIndex++;
         }
 
@@ -249,7 +244,7 @@ public class Actor {
 
     // Update local data from physics engine, if applicable
     if(body != null) {
-      position = Renderer.worldToScreen(body.getPosition());
+      position = AdefyRenderer.worldToScreen(body.getPosition());
       rotation = body.getAngle() * 57.2957795786f;
     }
 
@@ -269,7 +264,7 @@ public class Actor {
     if(body == null) {
       this.position = position;
     } else {
-      body.setTransform(Renderer.screenToWorld(position), body.getAngle());
+      body.setTransform(AdefyRenderer.screenToWorld(position), body.getAngle());
     }
   }
 
@@ -287,7 +282,7 @@ public class Actor {
     if(body == null) {
       return position;
     } else {
-      return Renderer.worldToScreen(body.getPosition());
+      return AdefyRenderer.worldToScreen(body.getPosition());
     }
   }
   public float getRotation() {

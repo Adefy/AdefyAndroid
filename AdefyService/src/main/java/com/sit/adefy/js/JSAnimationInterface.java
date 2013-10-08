@@ -4,10 +4,9 @@ package com.sit.adefy.js;
 // Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
 //
 
-import android.util.Log;
 import android.webkit.JavascriptInterface;
 
-import com.sit.adefy.Renderer;
+import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.animations.BezAnimation;
 import com.sit.adefy.animations.VertAnimation;
 import com.sit.adefy.objects.Actor;
@@ -17,12 +16,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Arrays;
-
 public class JSAnimationInterface {
 
   private Actor findActor(int id) {
-    for(Actor a : Renderer.actors) {
+    for(Actor a : AdefyRenderer.actors) {
       if(a.getId() == id) { return a; }
     }
 

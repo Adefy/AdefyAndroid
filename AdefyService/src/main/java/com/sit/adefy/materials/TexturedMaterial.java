@@ -6,7 +6,7 @@ package com.sit.adefy.materials;
 
 import android.opengl.GLES20;
 
-import com.sit.adefy.Renderer;
+import com.sit.adefy.AdefyRenderer;
 
 import java.nio.FloatBuffer;
 
@@ -56,7 +56,7 @@ public class TexturedMaterial extends Material {
 
   // Called by our renderer when we can create our shader
   public static void buildShader() {
-    shader = Renderer.buildShader(vertCode, fragCode);
+    shader = AdefyRenderer.buildShader(vertCode, fragCode);
     positionHandle = GLES20.glGetAttribLocation(shader, "Position");
     texCoordHandle = GLES20.glGetAttribLocation(shader, "aTexCoord");
     modelHandle = GLES20.glGetUniformLocation(shader, "ModelView");
@@ -66,7 +66,7 @@ public class TexturedMaterial extends Material {
   public void draw(FloatBuffer vertBuffer, int vertCount, int mode, float[] modelView) {
 
     // Set up handles
-    GLES20.glUniformMatrix4fv(projectionHandle, 1, false, Renderer.getProjection(), 0);
+    GLES20.glUniformMatrix4fv(projectionHandle, 1, false, AdefyRenderer.getProjection(), 0);
     GLES20.glUniformMatrix4fv(modelHandle, 1, false, modelView, 0);
     //GLES20.glUniform4fv(colorHandle, 1, color.toFloatArray(), 0);
 

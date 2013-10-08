@@ -12,7 +12,6 @@ import android.util.Log;
 import com.sit.adefy.materials.SingleColorMaterial;
 import com.sit.adefy.materials.TexturedMaterial;
 import com.sit.adefy.objects.Actor;
-import com.sit.adefy.objects.Color3;
 
 import org.jbox2d.common.Vec2;
 import org.jbox2d.common.Vec3;
@@ -20,10 +19,9 @@ import org.jbox2d.common.Vec3;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Timer;
 
-public class Renderer implements GLSurfaceView.Renderer {
+public class AdefyRenderer implements GLSurfaceView.Renderer {
 
   private static float PPM = 128.0f;
   public static Vec2 screenToWorld(Vec2 cords) { return new Vec2(cords.x / PPM, cords.y / PPM); }
@@ -120,7 +118,7 @@ public class Renderer implements GLSurfaceView.Renderer {
     GLES20.glClearColor(clearCol.x, clearCol.y, clearCol.z, 1.0f);
     GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-    for(Actor a : Renderer.actors) {
+    for(Actor a : AdefyRenderer.actors) {
 
       if(!a.getMaterialName().equals(material)) {
         GLES20.glUseProgram(a.getMaterial().getShader());
