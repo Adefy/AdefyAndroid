@@ -16,6 +16,10 @@ public class SingleColorMaterial extends Material {
 
   public static String name = "single_color";
 
+  // A bit of a strange name, but it fits. True if we were just used to draw something.
+  // Skips some of the draw routine.
+  public static boolean justUsed = false;
+
   private Color3 color;
 
   // Shader var handles
@@ -83,11 +87,24 @@ public class SingleColorMaterial extends Material {
     GLES20.glUniform4fv(colorHandle, 1, color.toFloatArray(), 0);
 
     GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, vertBuffer);
-    GLES20.glEnableVertexAttribArray(positionHandle);
+
+    if(!SingleColorMaterial.justUsed) {
+      if(TexturedMaterial.justUsed) { TexturedMaterial.postFinalDraw(); }
+      TexturedMaterial.justUsed = false;
+
+      SingleColorMaterial.justUsed = true;
+
+      GLES20.glEnableVertexAttribArray(positionHandle);
+    }
 
     // Draw!
     GLES20.glDrawArrays(mode, 0, vertCount);
 
+    GLES20.glDisableVertexAttribArray(positionHandle);
+  }
+
+  // Called by other materials if we were just drawing
+  public static void postFinalDraw() {
     GLES20.glDisableVertexAttribArray(positionHandle);
   }
 }

@@ -193,6 +193,19 @@ public class JSActorInterface {
     return "{ x: \"" + v.x + "\", y: \"" + v.y + "\" }";
   }
 
+  // Set actor texture by name, fails with false if the actor is not found
+  @JavascriptInterface
+  public boolean setActorTexture(String name, int id) {
+    Actor a = findActor(id);
+    if (a == null) { return false; }
+
+    // Esure the renderer has the texture loaded
+    if(!AdefyRenderer.textureExists(name)) { return false; }
+
+    a.setTexture(name);
+    return true;
+  }
+
   // Set actor rotation in radians, fails with false if the actor is not found
   @JavascriptInterface
   public boolean setActorRotation(float angle, int id, boolean radians) {

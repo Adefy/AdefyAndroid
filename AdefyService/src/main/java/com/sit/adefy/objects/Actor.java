@@ -5,11 +5,14 @@ package com.sit.adefy.objects;
 //
 
 import android.opengl.GLES20;
+import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
+import android.util.Log;
 
 import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.materials.Material;
 import com.sit.adefy.materials.SingleColorMaterial;
+import com.sit.adefy.materials.TexturedMaterial;
 import com.sit.adefy.physics.BodyQueueDef;
 import com.sit.adefy.physics.PhysicsEngine;
 import org.jbox2d.collision.shapes.PolygonShape;
@@ -86,8 +89,29 @@ public class Actor {
     return null;
   }
 
+  // Use the texture material if we are not already doing so, and set the texture name
+  public void setTexture(String name) {
+
+    // Bail if we don't have exactly 15 vertices (box)
+    if(vertices.length != 15) {
+      Log.d("adefy", "Can't set texture on non-box object " + vertices.length);
+      return;
+    }
+
+    // Go through and find the texture handle
+    int[] handle = AdefyRenderer.getTextureHandle(name);
+
+    if(!material.getName().equals(TexturedMaterial.name)) {
+      this.material = new TexturedMaterial(handle);
+    } else {
+      ((TexturedMaterial)this.material).setTextureHandle(handle);
+    }
+  }
+
   public void setMaterial(Material material) {
-    this.material = material;
+    synchronized (this.material) {
+      this.material = material;
+    }
   }
 
   public Material getMaterial() {
@@ -113,6 +137,22 @@ public class Actor {
     vertBuffer = byteBuffer.asFloatBuffer();
     vertBuffer.put(vertices);
     vertBuffer.position(0);
+
+    // Set up UV coords
+    texVerts = new float[]{
+        0.0f, 1.0f,
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f
+    };
+
+    // Set up texture coordinates
+    byteBuffer = ByteBuffer.allocateDirect(texVerts.length * 4);
+    byteBuffer.order(ByteOrder.nativeOrder());
+    texBuffer = byteBuffer.asFloatBuffer();
+    texBuffer.put(texVerts);
+    texBuffer.position(0);
 
     if(body != null) {
       destroyPhysicsBody();
@@ -252,10 +292,19 @@ public class Actor {
     Matrix.translateM(modelView, 0, position.x, position.y, 1.0f);
     Matrix.rotateM(modelView, 0, rotation, 0, 0, 1.0f);
 
-    if(renderMode == 1) {
-      material.draw(vertBuffer, vertices.length / 3, GLES20.GL_TRIANGLE_STRIP, modelView);
-    } else if(renderMode == 2) {
-      material.draw(vertBuffer, vertices.length / 3, GLES20.GL_TRIANGLE_FAN, modelView);
+    // Default (renderMode 1)
+    int drawMode = GLES20.GL_TRIANGLE_STRIP;
+
+    if(renderMode == 2) {
+      drawMode = GLES20.GL_TRIANGLE_FAN;
+    }
+
+    synchronized (material) {
+      if(material.getName().equals(SingleColorMaterial.name)) {
+        ((SingleColorMaterial)material).draw(vertBuffer, vertices.length / 3, drawMode, modelView);
+      } else if(material.getName().equals(TexturedMaterial.name)) {
+        ((TexturedMaterial)material).draw(vertBuffer, texBuffer, vertices.length / 3, drawMode, modelView);
+      }
     }
   }
 

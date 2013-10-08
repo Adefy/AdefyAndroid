@@ -10,8 +10,9 @@ import org.jbox2d.common.Vec3;
 
 import javax.microedition.khronos.opengles.GL10;
 
-public class TextActor { //extends Sprite {
 /*
+public class TextActor { //extends Sprite {
+
   private Vec2 offset = new Vec2(0, 0); // Takes into account padding
 
   // Default is white on black
@@ -67,5 +68,5 @@ public class TextActor { //extends Sprite {
 
   public Vec2 getPosition() {
     return new Vec2(super.getPosition().x - offset.x, super.getPosition().y - offset.y);
-  } */
-}
+  }
+} */

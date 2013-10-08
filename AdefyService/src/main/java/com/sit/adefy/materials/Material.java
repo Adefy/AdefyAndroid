@@ -25,8 +25,4 @@ public class Material {
   public int getShader() {
     return shader;
   }
-
-  public void draw(FloatBuffer verts, int vertCount, int mode, float[] modelView) {
-    //
-  }
 }

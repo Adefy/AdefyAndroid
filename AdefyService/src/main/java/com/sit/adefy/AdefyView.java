@@ -11,10 +11,12 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.WindowManager;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
+import android.widget.TextView;
 
 import com.sit.adefy.js.JSActorInterface;
 import com.sit.adefy.js.JSAnimationInterface;
@@ -32,18 +34,18 @@ public class AdefyView extends GLSurfaceView {
   private AdefyRenderer renderer;
   private WebView web;
 
-  private String adName = null;
-  private String apiKey = null;
+  private static String adName = null;
+  private static String apiKey = null;
 
   // Purely for debugging!
   // TODO: Remove
   private String adId = null;
 
-  private String adSourcePath;
-  private String adefySourcePath;
-  private JSONArray textureArray;
+  private static String adSourcePath;
+  private static String adefySourcePath;
+  private static JSONArray textureArray;
 
-  private StringBuilder adRuntime = new StringBuilder();
+  private static StringBuilder adRuntime = new StringBuilder();
 
   // Interfaces!
   private String ifaceDef =
@@ -85,6 +87,7 @@ public class AdefyView extends GLSurfaceView {
     // Set up renderer and GL ES 2.0
     renderer = new AdefyRenderer();
     setEGLContextClientVersion(2);
+    setPreserveEGLContextOnPause(true);
     setRenderer(renderer);
 
     if(attrs != null && context.getTheme() != null) {
@@ -186,6 +189,9 @@ public class AdefyView extends GLSurfaceView {
       adSourcePath = manifestObj.getString("ad");
       adefySourcePath = manifestObj.getString("lib");
       textureArray = manifestObj.getJSONArray("textures");
+
+      // Send texture information to renderer
+      renderer.setTextureInfo(textureArray, getContext().getCacheDir() + "/" + adName);
 
     } catch (Exception e) {
       e.printStackTrace();
