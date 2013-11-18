@@ -18,8 +18,14 @@ import org.json.JSONObject;
 
 public class JSAnimationInterface {
 
+  private AdefyRenderer renderer;
+
+  public JSAnimationInterface(AdefyRenderer renderer) {
+    this.renderer = renderer;
+  }
+
   private Actor findActor(int id) {
-    for(Actor a : AdefyRenderer.actors) {
+    for(Actor a : renderer.actors) {
       if(a.getId() == id) { return a; }
     }
 

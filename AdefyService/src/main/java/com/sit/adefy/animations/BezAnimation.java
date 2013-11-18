@@ -276,6 +276,7 @@ public class BezAnimation {
         }
 
         if(t[0] > 1) {
+          float val = update(1);
           cancel();
 
           if(cbEnd.length() > 0) {

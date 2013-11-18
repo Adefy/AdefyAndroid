@@ -5,11 +5,11 @@ package com.sit.adefy.objects;
 //
 
 import android.opengl.GLES20;
-import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.util.Log;
 
 import com.sit.adefy.AdefyRenderer;
+import com.sit.adefy.js.JSActorInterface;
 import com.sit.adefy.materials.Material;
 import com.sit.adefy.materials.SingleColorMaterial;
 import com.sit.adefy.materials.TexturedMaterial;
@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Actor {
 
@@ -54,11 +55,20 @@ public class Actor {
   private float restitution;
 
   private Material material;
+  private AdefyRenderer renderer;
 
   public int renderMode = 2;
 
-  public Actor(int _id, float[] _vertices) {
+  private Actor attachment = null;
+  private float attachmentOffx = 0;
+  private float attachmentOffy = 0;
+
+  private int layer = 0;
+  private int physicsLayer = 0;
+
+  public Actor(AdefyRenderer renderer, int _id, float[] _vertices) {
     this.id = _id;
+    this.renderer = renderer;
 
     // Build initial actor
     updateVertices(_vertices);
@@ -66,7 +76,113 @@ public class Actor {
     // Start out with solid material
     material = new SingleColorMaterial();
 
-    AdefyRenderer.actors.add(this);
+    addToRenderer();
+  }
+
+  public int getLayer() { return layer; }
+  public int getPhysicsLayer() { return physicsLayer; }
+
+  public void setLayer(int l) {
+    layer = l;
+    removeFromRenderer();
+    addToRenderer();
+  }
+
+  public void setPhysicsLayer(int l) {
+    physicsLayer = l;
+    destroyPhysicsBody();
+    createPhysicsBody(density, friction, restitution);
+  }
+
+  // Add us to the render list, taking layers into account
+  private void addToRenderer() {
+
+    // Add as first item
+    if(renderer.actors.size() == 0) {
+      renderer.actors.add(this);
+    } else {
+
+      // Go through and add between two larger and smaller actors
+      for(int i = 0; i < renderer.actors.size(); i++) {
+
+        // Find smaller actor behind us
+        if(renderer.actors.get(i).getLayer() <= layer) {
+
+          // Make sure there is at least one more actor
+          if(renderer.actors.size() >= i + 2) {
+
+            // Check if the next actor is larger than us. If so, insert
+            if(renderer.actors.get(i + 1).getLayer() >= layer) {
+              renderer.actors.add(i + 1, this);
+              return;
+            }
+
+          // We are at the end, just insert ourselves
+          } else {
+            renderer.actors.add(this);
+            return;
+          }
+        }
+      }
+
+      // If we still haven't returned, it means we are the smallest actor. So ship ittt
+      renderer.actors.add(0, this);
+    }
+  }
+
+  // Remove us from the renderer list
+  private void removeFromRenderer() {
+    renderer.actors.remove(this);
+  }
+
+  public boolean hasAttachment() { return attachment != null; }
+  public Actor getAttachment() { return attachment; }
+
+  // setTexture is false when the texture is not yet loaded, and the set operation
+  // has been queued
+  public Actor attachTexture(String name, float w, float h, float offx, float offy, float angle, boolean setTexture) {
+
+    // If we already have an attachment, kill it
+    if(attachment != null) {
+      attachment.destroy();
+      attachment = null;
+    }
+
+    // Create new actor
+    float[] verts = new float[10];
+
+    verts[0] = -w;
+    verts[1] = -h;
+    verts[2] = -w;
+    verts[3] =  h;
+    verts[4] =  w;
+    verts[5] =  h;
+    verts[6] =  w;
+    verts[7] = -h;
+    verts[8] = -w;
+    verts[9] = -h;
+
+    int id = JSActorInterface.getNextID();
+    attachment = new Actor(renderer, id, verts);
+    if(setTexture) { attachment.setTexture(name); }
+    attachment.setRotation(angle);
+
+    attachmentOffx = offx;
+    attachmentOffy = offy;
+
+    return attachment;
+  }
+
+  public boolean removeAttachment() {
+    if(attachment == null) { return false; }
+    else { attachment.destroy(); attachment = null; return true; }
+  }
+
+  public boolean setAttachmentVisibility(boolean visible) {
+    if(attachment == null) { return false; }
+
+    attachment.visible = visible;
+    return true;
   }
 
   public void setPhysicsVertices(float[] verts) {
@@ -99,7 +215,7 @@ public class Actor {
     }
 
     // Go through and find the texture handle
-    int[] handle = AdefyRenderer.getTextureHandle(name);
+    int[] handle = renderer.getTextureHandle(name);
 
     if(!material.getName().equals(TexturedMaterial.name)) {
       this.material = new TexturedMaterial(handle);
@@ -109,9 +225,7 @@ public class Actor {
   }
 
   public void setMaterial(Material material) {
-    synchronized (this.material) {
-      this.material = material;
-    }
+    this.material = material;
   }
 
   public Material getMaterial() {
@@ -125,7 +239,7 @@ public class Actor {
   public void destroy() {
 
     if(body != null) { destroyPhysicsBody(); }
-    AdefyRenderer.actors.remove(this);
+    removeFromRenderer();
   }
 
   // Refreshes the internal vertex buffer
@@ -218,6 +332,7 @@ public class Actor {
     }
 
     bd.position = AdefyRenderer.screenToWorld(position);
+    bd.angle = rotation * 0.0174532925f;
 
     // Add to physics world body creation queue, will be finalized when possible
     PhysicsEngine.requestBodyCreation(new BodyQueueDef(id, bd));
@@ -266,6 +381,10 @@ public class Actor {
       fd.friction = friction;
       fd.restitution = restitution;
 
+      // Setup physics layer
+      fd.filter.categoryBits = PhysicsEngine.getCategoryBits(physicsLayer);
+      fd.filter.maskBits = PhysicsEngine.getMaskBits(physicsLayer);
+
       body.createFixture(fd);
     }
   }
@@ -289,7 +408,7 @@ public class Actor {
     }
 
     Matrix.setIdentityM(modelView, 0);
-    Matrix.translateM(modelView, 0, position.x, position.y, 1.0f);
+    Matrix.translateM(modelView, 0, position.x - AdefyRenderer.camX, position.y - AdefyRenderer.camY, 1.0f);
     Matrix.rotateM(modelView, 0, rotation, 0, 0, 1.0f);
 
     // Default (renderMode 1)
@@ -299,12 +418,12 @@ public class Actor {
       drawMode = GLES20.GL_TRIANGLE_FAN;
     }
 
-    synchronized (material) {
-      if(material.getName().equals(SingleColorMaterial.name)) {
-        ((SingleColorMaterial)material).draw(vertBuffer, vertices.length / 3, drawMode, modelView);
-      } else if(material.getName().equals(TexturedMaterial.name)) {
-        ((TexturedMaterial)material).draw(vertBuffer, texBuffer, vertices.length / 3, drawMode, modelView);
-      }
+    final Material myMaterial = material;
+
+    if(myMaterial.getName().equals(SingleColorMaterial.name)) {
+      ((SingleColorMaterial)myMaterial).draw(vertBuffer, vertices.length / 3, drawMode, modelView);
+    } else if(myMaterial.getName().equals(TexturedMaterial.name)) {
+      ((TexturedMaterial)myMaterial).draw(vertBuffer, texBuffer, vertices.length / 3, drawMode, modelView);
     }
   }
 

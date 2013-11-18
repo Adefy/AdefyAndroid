@@ -21,31 +21,33 @@ import android.widget.TextView;
 import com.sit.adefy.js.JSActorInterface;
 import com.sit.adefy.js.JSAnimationInterface;
 import com.sit.adefy.js.JSEngineInterface;
+import com.sit.adefy.physics.PhysicsEngine;
 
+import org.jbox2d.common.Vec3;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.Timer;
 
 public class AdefyView extends GLSurfaceView {
 
   private AdefyRenderer renderer;
   private WebView web;
 
-  private static String adName = null;
-  private static String apiKey = null;
+  private String adName = null;
+  private String apiKey = null;
 
   // Purely for debugging!
   // TODO: Remove
   private String adId = null;
 
-  private static String adSourcePath;
-  private static String adefySourcePath;
-  private static JSONArray textureArray;
+  private String adSourcePath;
+  private String adefySourcePath;
 
-  private static StringBuilder adRuntime = new StringBuilder();
+  private StringBuilder adRuntime;
 
   // Interfaces!
   private String ifaceDef =
@@ -89,6 +91,12 @@ public class AdefyView extends GLSurfaceView {
     setEGLContextClientVersion(2);
     setPreserveEGLContextOnPause(true);
     setRenderer(renderer);
+
+    PhysicsEngine.destroyAllBodies();
+    PhysicsEngine.renderer = renderer;
+
+    // Wait for bodies to clear
+    while(PhysicsEngine.waitingOnDestroy()) { }
 
     if(attrs != null && context.getTheme() != null) {
 
@@ -162,6 +170,7 @@ public class AdefyView extends GLSurfaceView {
 
     parseDelivered();
 
+    adRuntime = new StringBuilder();
     adRuntime.append("javascript:(function(){");
     getJS(adRuntime, adefySourcePath);  // AdefyJS
     getJS(adRuntime, adSourcePath);     // Ad code
@@ -188,7 +197,7 @@ public class AdefyView extends GLSurfaceView {
       JSONObject manifestObj = new JSONObject(sb.toString());
       adSourcePath = manifestObj.getString("ad");
       adefySourcePath = manifestObj.getString("lib");
-      textureArray = manifestObj.getJSONArray("textures");
+      JSONArray textureArray = manifestObj.getJSONArray("textures");
 
       // Send texture information to renderer
       renderer.setTextureInfo(textureArray, getContext().getCacheDir() + "/" + adName);
@@ -224,6 +233,8 @@ public class AdefyView extends GLSurfaceView {
     // Where the magic happens
     web = new WebView(getContext());
     web.getSettings().setJavaScriptEnabled(true);
+    web.clearCache(true);
+    web.clearHistory();
 
     // Set up console logging
     web.setWebChromeClient(new WebChromeClient() {
@@ -239,9 +250,9 @@ public class AdefyView extends GLSurfaceView {
     web.addJavascriptInterface(new WebViewLoadNotify(), "__iface_load");
 
     // AJS intefaces
-    web.addJavascriptInterface(new JSEngineInterface(), "__iface_engine");
-    web.addJavascriptInterface(new JSActorInterface(), "__iface_actors");
-    web.addJavascriptInterface(new JSAnimationInterface(), "__iface_animations");
+    web.addJavascriptInterface(new JSEngineInterface(renderer), "__iface_engine");
+    web.addJavascriptInterface(new JSActorInterface(renderer), "__iface_actors");
+    web.addJavascriptInterface(new JSAnimationInterface(renderer), "__iface_animations");
 
     // Load interface access
     String loadJS =
@@ -252,7 +263,7 @@ public class AdefyView extends GLSurfaceView {
         "})()";
 
     // Inject!
-    web.loadData("", "text/html", null);
+    web.loadDataWithBaseURL(null, "", null, "utf-8", null);
     web.loadUrl(loadJS);
   }
 

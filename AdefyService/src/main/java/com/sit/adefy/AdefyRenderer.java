@@ -6,16 +6,19 @@ package com.sit.adefy;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.opengl.ETC1Util;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
 import android.opengl.Matrix;
 import android.util.Log;
+import android.view.inputmethod.ExtractedTextRequest;
 
 import com.sit.adefy.materials.SingleColorMaterial;
 import com.sit.adefy.materials.TexturedMaterial;
 import com.sit.adefy.objects.Actor;
 import com.sit.adefy.objects.Texture;
+import com.sit.adefy.objects.TextureSetQueueItem;
 
 import org.jbox2d.common.Vec2;
 import org.jbox2d.common.Vec3;
@@ -25,6 +28,10 @@ import org.json.JSONObject;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Timer;
 
@@ -36,8 +43,8 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
   public static float getPPM() { return PPM; }
   public static float getMPP() { return 1.0f / PPM; }
 
-  public final static ArrayList<Actor> actors = new ArrayList<Actor>();
-  private static ArrayList<Texture> textures = new ArrayList<Texture>();
+  public final ArrayList<Actor> actors = new ArrayList<Actor>();
+  private ArrayList<Texture> textures = new ArrayList<Texture>();
 
   private static int screenW = 0;
   private static int screenH = 0;
@@ -46,25 +53,36 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
 
   private static float[] projection = new float[16];
   public static Timer animationTimer = new Timer();
-  public static Vec3 clearCol = new Vec3(0.0f, 0.0f, 0.0f);
+  public static Vec3 clearCol = null;
   private String material = "";
 
   private JSONArray textureJSON = null;
   private String texturePath = null;
   private boolean textureLoadQueued;
 
+  public static float camX;
+  public static float camY;
+
+  public AdefyRenderer() {
+    super();
+
+    TexturedMaterial.justUsed = false;
+    TexturedMaterial.previousTexture = -1;
+    SingleColorMaterial.justUsed = false;
+  }
+
   @Override
   public void onSurfaceCreated(GL10 unused, EGLConfig config) {
 
     // Use our clear color
+    animationTimer.cancel();
+    animationTimer = new Timer();
+    clearCol = new Vec3(0.0f, 0.0f, 0.0f);
     GLES20.glClearColor(clearCol.x, clearCol.y, clearCol.z, 1.0f);
 
     // Build shaders
     SingleColorMaterial.buildShader();
     TexturedMaterial.buildShader();
-
-    Log.d("Adefy", "attempting to reload textures " + textureJSON);
-    reloadTextures();
   }
 
   public static int buildShader(String vertSrc, String fragSrc) {
@@ -136,6 +154,17 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
     this.textureLoadQueued = true;
   }
 
+  public void queueTextureSet(Actor a, String name) {
+
+    TextureSetQueueItem item = new TextureSetQueueItem(a, name);
+
+    synchronized (textureSetQueue) {
+      textureSetQueue.add(item);
+    }
+  }
+
+  private final ArrayList<TextureSetQueueItem> textureSetQueue = new ArrayList<TextureSetQueueItem>();
+
   @Override
   public void onDrawFrame(GL10 unused) {
 
@@ -147,18 +176,41 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
     GLES20.glClearColor(clearCol.x, clearCol.y, clearCol.z, 1.0f);
     GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-    synchronized (AdefyRenderer.actors) {
-      for(int i = 0; i < AdefyRenderer.actors.size(); i++) {
+    try {
+      synchronized (actors) {
 
-        Actor a = AdefyRenderer.actors.get(i);
+        for(int i = 0; i < actors.size(); i++) {
 
-        if(!a.getMaterialName().equals(material)) {
-          GLES20.glUseProgram(a.getMaterial().getShader());
-          material = a.getMaterialName();
+          Actor a = actors.get(i);
+
+          // Render only if visible
+          if(a.visible) {
+
+            // Render attachment instead, if necessary
+            if(a.hasAttachment()) {
+              if(a.getAttachment().visible) {
+
+                // Store for now to update state
+                Actor temp = a.getAttachment();
+                temp.setPosition(a.getPosition());
+                temp.setRotation(a.getRotation());
+
+                // Switch render subject
+                a = temp;
+              }
+            }
+
+            if(!a.getMaterialName().equals(material)) {
+              GLES20.glUseProgram(a.getMaterial().getShader());
+              material = a.getMaterialName();
+            }
+
+            a.draw();
+          }
         }
-
-        a.draw();
       }
+    } catch (Exception e) {
+      e.printStackTrace();
     }
 
     long endTime = System.currentTimeMillis();
@@ -172,9 +224,6 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
       }
     }
   }
-
-  private int logs = 0;
-  private long runningFPS = 0;
 
   public static float[] getProjection() {
     return projection;
@@ -192,7 +241,7 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
   public int getTargetFPS() { return targetFPS; }
 
   // Checks if we have a texture loaded by name
-  public static boolean textureExists(String name) {
+  public boolean textureExists(String name) {
     for(int i = 0; i < textures.size(); i++) {
       if(textures.get(i).getName().equals(name)) {
         return true;
@@ -203,7 +252,7 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
   }
 
   // Returns the handle for the specified texture
-  public static int[] getTextureHandle(String name) {
+  public int[] getTextureHandle(String name) {
     for(int i = 0; i < textures.size(); i++) {
       if(textures.get(i).getName().equals(name)) {
         return textures.get(i).getHandle();
@@ -213,23 +262,34 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
     return null;
   }
 
+  public void clearTextures() {
+    textures.clear();
+  }
+
   // Creates bitmaps and uploads textures according to textureJSON and texturePath
   private void reloadTextures() {
     if(textureJSON == null) { return; }
 
-    Log.v("adefy", "reloading textures");
+    // Clear textures
+    textures.clear();
+
+    Log.v("adefy", "reloading textures (" + textureJSON.length() + ")");
     for (int i = 0; i < textureJSON.length(); i++)  {
 
       try {
 
         // Only supports single image-per-texture loading for now!
         JSONObject tex = textureJSON.getJSONObject(i);
+        String type = tex.getString("type");
+        String compression = tex.getString("compression");
 
-        if(tex.getString("type").equals("image")) {
+        if(!type.equals("image")) {
+          Log.d("AdefyRenderer", "Can't load texture, unsupported type: " + type);
+        } else if(!compression.equals("none") && !compression.equals("etc1")) {
+          Log.d("AdefyRenderer", "Can't load texture, unsupported compression: " + compression);
+        } else {
 
-          // Create bitmap
-          Bitmap bitmap = BitmapFactory.decodeFile(texturePath + "/" + tex.getString("path"));
-
+          // Generate texture, set settings and such
           Texture texture = new Texture(tex.getString("name"));
           GLES20.glGenTextures(1, texture.getHandle(), 0);
 
@@ -237,21 +297,51 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
 
           // Setup texture options
           GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-          GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+          GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
 
-          // Load into GL
-          GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, bitmap, 0);
+          // Image, load up
+          if(compression.equals("none")) {
 
-          bitmap.recycle();
+            // Create bitmap
+            Bitmap bitmap = BitmapFactory.decodeFile(texturePath + "/" + tex.getString("path"));
+            GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, bitmap, 0);
+            bitmap.recycle();
+
+          } else if(compression.equals("etc1")) {
+
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+
+            // Create ETC1
+            FileInputStream stream = new FileInputStream(new File(texturePath + "/" + tex.getString("path")));
+            ETC1Util.loadTexture(GLES20.GL_TEXTURE_2D, 0, 0, GLES20.GL_RGB, GLES20.GL_UNSIGNED_SHORT_5_6_5, stream);
+            stream.close();
+          }
+
           textures.add(texture);
 
-          Log.d("Adefy", "Loaded tex " + tex.getString("name") + " size " + (bitmap.getByteCount() / 1024) + "kB");
+          synchronized (textureSetQueue) {
 
-        } else {
-          Log.d("adefy", "Only image textures are supported at this point...");
+            // Go through and apply any pending texture sets
+            ArrayList<TextureSetQueueItem> remove = new ArrayList<TextureSetQueueItem>();
+
+            for(TextureSetQueueItem request: textureSetQueue) {
+
+              if(request.getName().equals(texture.getName())) {
+                request.apply();
+                remove.add(request);
+              }
+            }
+
+            for(TextureSetQueueItem req : remove) {
+              textureSetQueue.remove(req);
+            }
+
+            remove.clear();
+          }
         }
 
-      } catch (JSONException e) {
+      } catch (Exception e) {
         e.printStackTrace();
       }
     }

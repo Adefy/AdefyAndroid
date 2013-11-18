@@ -5,6 +5,7 @@ package com.sit.adefy.materials;
 //
 
 import android.opengl.GLES20;
+import android.util.Log;
 import android.widget.TextView;
 
 import com.sit.adefy.AdefyRenderer;
@@ -18,7 +19,7 @@ public class TexturedMaterial extends Material {
   // A bit of a strange name, but it fits. True if we were just used to draw something.
   // Skips some of the draw routine.
   public static boolean justUsed = false;
-  private static int previousTexture;
+  public static int previousTexture;
 
   // Shader var handles
   private static int positionHandle;

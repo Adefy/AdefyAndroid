@@ -42,9 +42,14 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class AdefyScene extends Activity {
 
+  // Used to enable finishing from interface
+  private static AdefyScene me = null;
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    me = this;
 
     Intent launchedIntent = getIntent();
     String adName = launchedIntent.getStringExtra("adName");
@@ -56,8 +61,21 @@ public class AdefyScene extends Activity {
 
     AdefyView mView = new AdefyView(apiKey, adName, adId, this);
     setContentView(mView);
+  }
 
-    // String texturesPath = "";
-    //refreshTextures("adefyFolder");
+  @Override
+  protected void onPause() {
+    super.onPause();
+    finish();
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    finish();
+  }
+
+  public static AdefyScene getMe() {
+    return me;
   }
 }

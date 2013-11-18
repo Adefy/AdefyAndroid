@@ -4,22 +4,29 @@ package com.sit.adefy.js;
 // Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
 //
 // Provides:
-//   createActor(String verts) -> Number id
-//   updateVertices(String verts, Number id) -> Bool success
-//   getVertices(Number id) -> String verts
-//   destroyActor(Number id) -> Bool success
-//   setPhysicsVertices(String verts, Number id) -> Bool success
-//   setRenderMode(Number mode, Number id) -> Bool success
-//   setActorPosition(Number x, Number y, Number id) -> Bool success
-//   getActorPosition(Number id) -> String position
-//   setActorRotation(Number angle, Number id, Boolean radians) -> Bool success
-//   getActorRotation(Number id, Boolean radians) -> Number angle
-//   setActorColor(Number r, Number g, Number b, Number id) -> Bool success
-//   getActorColor(Number id) -> String color
-//   enableActorPhysics(Number mass, Number friction, Number elasticity, Number id) -> Bool success
-//   destroyPhysicsBody(Number id) -> Bool success
+//   createActor(String verts) -> Num id
+//   attachTexture(String texture, Num w, Num h, Num x, Num y, Num angle, Num id) -> Bool success
+//   removeAttachment(Num id) -> Bool success
+//   setAttachmentVisiblity(Bool visible, Num id) -> Bool success
+//   setActorLayer(Num layer, Num id) -> Bool success
+//   setActorPhysicsLayer(Num layer, Num id) -> Bool success
+//   updateVertices(String verts, Num id) -> Bool success
+//   getVertices(Num id) -> String verts
+//   destroyActor(Num id) -> Bool success
+//   setPhysicsVertices(String verts, Num id) -> Bool success
+//   setRenderMode(Num mode, Num id) -> Bool success
+//   setActorPosition(Num x, Num y, Number id) -> Bool success
+//   getActorPosition(Num id) -> String position
+//   setActorRotation(Num angle, Num id, Boolean radians) -> Bool success
+//   getActorRotation(Num id, Boolean radians) -> Num angle
+//   setActorColor(Num r, Num g, Num b, Num id) -> Bool success
+//   getActorColor(Num id) -> String color
+//   enableActorPhysics(Num mass, Num friction, Num elasticity, Num id) -> Bool success
+//   destroyPhysicsBody(Num id) -> Bool success
 
+import android.util.Log;
 import android.webkit.JavascriptInterface;
+import android.widget.Toast;
 
 import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.objects.Actor;
@@ -30,11 +37,16 @@ import org.jbox2d.common.Vec2;
 // For full, proper documentation, check the AWGL implementation
 public class JSActorInterface {
 
-  private int nextID = 0;
-  private int getNextID() { return nextID++; }
+  private static int nextID = 0;
+  public static int getNextID() { return nextID++; }
+  private AdefyRenderer renderer;
+
+  public JSActorInterface(AdefyRenderer renderer) {
+    this.renderer = renderer;
+  }
 
   private Actor findActor(int id) {
-    for(Actor a : AdefyRenderer.actors) {
+    for(Actor a : renderer.actors) {
       if(a.getId() == id) { return a; }
     }
 
@@ -42,7 +54,7 @@ public class JSActorInterface {
   }
 
   @JavascriptInterface
-  public int createActor(String verts) {
+  public int createActor(String verts, String texVerts) {
 
     // Generate vert array
     // Verts are seperated by commas
@@ -64,7 +76,7 @@ public class JSActorInterface {
 
     // Ship actor
     int id = getNextID();
-    new Actor(id, _verts);
+    new Actor(renderer, id, _verts);
 
     return id;
   }
@@ -76,6 +88,61 @@ public class JSActorInterface {
 
     a.destroy();
 
+    return true;
+  }
+
+  @JavascriptInterface
+  public boolean attachTexture(String name, float w, float h, float x, float y, float angle, int id) {
+    Actor a = findActor(id);
+    if (a == null) { return false; }
+
+    boolean queue = false;
+
+    // Esure the renderer has the texture loaded
+    if(!renderer.textureExists(name)) {
+      queue = true;
+    }
+
+    Actor attachment = a.attachTexture(name, w, h, x, y, angle, !queue);
+
+    if(queue) {
+      renderer.queueTextureSet(attachment, name);
+    }
+
+    return true;
+  }
+
+  @JavascriptInterface
+  public boolean removeAttachment(int id) {
+    Actor a = findActor(id);
+    if (a == null) { return false; }
+
+    return a.removeAttachment();
+  }
+
+  @JavascriptInterface
+  public boolean setAttachmentVisiblity(boolean visible, int id) {
+    Actor a = findActor(id);
+    if (a == null) { return false; }
+
+    return a.setAttachmentVisibility(visible);
+  }
+
+  @JavascriptInterface
+  public boolean setActorLayer(int layer, int id) {
+    Actor a = findActor(id);
+    if (a == null) { return false; }
+
+    a.setLayer(layer);
+    return true;
+  }
+
+  @JavascriptInterface
+  public boolean setActorPhysicsLayer(int layer, int id) {
+    Actor a = findActor(id);
+    if (a == null) { return false; }
+
+    a.setPhysicsLayer(layer);
     return true;
   }
 
@@ -200,7 +267,11 @@ public class JSActorInterface {
     if (a == null) { return false; }
 
     // Esure the renderer has the texture loaded
-    if(!AdefyRenderer.textureExists(name)) { return false; }
+    if(!renderer.textureExists(name)) {
+      Log.d("adefy", "Queueing texture set for " + name);
+      renderer.queueTextureSet(a, name);
+      return false;
+    }
 
     a.setTexture(name);
     return true;

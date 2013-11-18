@@ -50,7 +50,7 @@ import javax.net.ssl.X509TrustManager;
 public class AdefyDownloader {
 
   // TODO: Make this private! It's only public for testing
-  public String serverInterface = "https://192.168.0.102:3000/r/fetch/";
+  public String serverInterface = "https://cloud.adefy.eu/api/r";
   private UserInformation uInfo;
   private Context ctx;
   private String APIKey;
@@ -64,19 +64,11 @@ public class AdefyDownloader {
     this.ctx = _ctx;
     this.APIKey = _apikey;
 
-    StringBuilder sb = new StringBuilder();
-    String charSpace = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-    for(int i = 0; i <  16; i++) {
-      sb.append(charSpace.charAt((int)Math.floor(Math.random() * charSpace.length())));
-    }
-
-    downloadPath = sb.toString();
-
     gatherUserInformation();
   }
 
-  // Contacts the server, sends userinfo, and expects to receive an ad.
+  // Contacts the server, sends userinfo, and expects to receive an ad. Unzips if a
+  // folder is provided. Otherwise, unzip
   //
   // Returns success
   public boolean fetchAd(String folder) { return fetchAd(folder, null); }
@@ -87,18 +79,46 @@ public class AdefyDownloader {
       return false;
     }
 
+    genDownloadPath();
+
     if(id != null) { adId = id; }
 
     try {
 
       downloadArchive(establishConnection());
-      unzipArchive(downloadPath + ".ttx", folder);
+      if(folder != null) { unzipArchive(getDownloadName(), folder); }
       return true;
 
     } catch (Exception e) {
 
       e.printStackTrace();
       return false;
+    }
+  }
+
+  private void genDownloadPath() {
+    StringBuilder sb = new StringBuilder();
+    String charSpace = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    for(int i = 0; i <  16; i++) {
+      sb.append(charSpace.charAt((int)Math.floor(Math.random() * charSpace.length())));
+    }
+
+    downloadPath = sb.toString();
+  }
+
+  public String getDownloadName() {
+    return downloadPath + ".ttx";
+  }
+
+  // Assuming we've downloaded an archive, and the name is in downloadPath
+  public void cleanArchive() {
+
+    if(downloadPath.length() == 16) {
+      File archive = new File(downloadPath + ".ttx");
+      if(archive.exists()) {
+        archive.delete();
+      }
     }
   }
 

@@ -4,7 +4,10 @@ package com.sit.adefy.physics;
 // Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
 //
 
+import android.util.Log;
+
 import com.sit.adefy.AdefyRenderer;
+import com.sit.adefy.objects.Actor;
 
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
@@ -21,10 +24,53 @@ public class PhysicsEngine {
   private static Vec2 gravity = new Vec2(0, 0);
   private static PhysicsThread pThread = null;
 
-  private static ArrayList<BodyQueueDef> bodyCreateQ = new ArrayList<BodyQueueDef>();
-  private static ArrayList<Body> bodyDestroyQ = new ArrayList<Body>();
+  private static final ArrayList<BodyQueueDef> bodyCreateQ = new ArrayList<BodyQueueDef>();
+  private static final ArrayList<Body> bodyDestroyQ = new ArrayList<Body>();
 
+  public static AdefyRenderer renderer;
   private static int bodyCount = 0;
+  private static boolean destroyAll = false;
+
+  private static int[] physicsLayers = new int[] {
+      0x0001, // 1
+      0x0002, // 2
+      0x0004, // 3
+      0x0008, // 4
+      0x0010, // 5
+      0x0020, // 6
+      0x0040, // 7
+      0x0080, // 8
+      0x0100, // 9
+      0x0200, // 10
+      0x0400, // 11
+      0x0800, // 12
+      0x1000, // 13
+      0x2000, // 14
+      0x4000, // 15
+      0x8000  // 16
+  };
+
+  public static int getCategoryBits(int layer) {
+    if(layer > physicsLayers.length - 1) {
+      return 0;
+    } else {
+      return physicsLayers[layer];
+    }
+  }
+
+  public static int getMaskBits(int layer) {
+
+    // Layer 0 collides with everything
+    if(layer == 0) {
+      return 0xffff;
+    }
+
+    if(layer > physicsLayers.length - 1) {
+      return 0;
+    } else {
+      return 0xffff & ~physicsLayers[layer];
+    }
+  }
 
   // Schedules the body for processing before the next world step
   //
@@ -39,8 +85,11 @@ public class PhysicsEngine {
       // If the thread already exists, then wait for it to finish running before re-creating
       // Technically one could just restart the thread, but recreating is simpler
       if(pThread != null) {
+        destroyAll = true;
         while(pThread.isRunning()) { }
       }
+
+      destroyAll = false;
 
       pThread = new PhysicsThread();
       pThread.start();
@@ -53,6 +102,17 @@ public class PhysicsEngine {
   // Queue up
   public static void destroyBody(Body body) {
     bodyDestroyQ.add(body);
+  }
+
+  public static void destroyAllBodies() {
+    if(bodyCount > 0) {
+      destroyAll = true;
+      bodyCount = 0;
+    }
+  }
+
+  public static boolean waitingOnDestroy() {
+    return destroyAll;
   }
 
   // Thread definition, this is where the physics magic happens
@@ -95,32 +155,48 @@ public class PhysicsEngine {
 
       // Step!
       while(!stop) {
+        if(destroyAll) { destroyAll = false; break; }
 
         // Record the start time, so we know how long it took to sim everything
         long startTime = System.currentTimeMillis();
 
         if(bodyDestroyQ.size() > 0) {
-          synchronized (bodyDestroyQ) {
+          try {
+            synchronized (bodyDestroyQ) {
 
-            for(Body body : bodyDestroyQ) {
-              physicsWorld.destroyBody(body);
-              bodyCount--;
+              for(Body body : bodyDestroyQ) {
+                physicsWorld.destroyBody(body);
+                bodyCount--;
+              }
+
+              bodyDestroyQ.clear();
             }
-
-            bodyDestroyQ.clear();
+          } catch (Exception e) {
+            e.printStackTrace();
           }
         }
 
-        if(bodyCreateQ.size() > 0) {
-          synchronized (bodyCreateQ) {
+        try {
 
-            // Handle creations
-            for (BodyQueueDef bq : bodyCreateQ) {
-              AdefyRenderer.actors.get(bq.getActorID()).onBodyCreation(physicsWorld.createBody(bq.getBd()));
+          if(bodyCreateQ.size() > 0) {
+            synchronized (bodyCreateQ) {
+
+                // Handle creations
+                for (BodyQueueDef bq : bodyCreateQ) {
+                  for (Actor a : renderer.actors) {
+                    if(a.getId() == bq.getActorID()) {
+                      a.onBodyCreation(physicsWorld.createBody(bq.getBd()));
+                      break;
+                    }
+                  }
+                }
+
+              bodyCreateQ.clear();
             }
-
-            bodyCreateQ.clear();
           }
+
+        } catch (Exception e) {
+          e.printStackTrace();
         }
 
         // Perform step, calculate elapsed time and divide by 1000 to get it
