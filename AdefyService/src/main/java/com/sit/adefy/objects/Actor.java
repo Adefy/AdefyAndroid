@@ -15,6 +15,8 @@ import com.sit.adefy.materials.SingleColorMaterial;
 import com.sit.adefy.materials.TexturedMaterial;
 import com.sit.adefy.physics.BodyQueueDef;
 import com.sit.adefy.physics.PhysicsEngine;
+
+import org.jbox2d.collision.shapes.MassData;
 import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
@@ -386,6 +388,16 @@ public class Actor {
       fd.filter.maskBits = PhysicsEngine.getMaskBits(physicsLayer);
 
       body.createFixture(fd);
+
+      // Force mass
+      MassData massdata = new MassData();
+      body.getMassData(massdata);
+
+      float scaleFactor = density / massdata.mass;
+      massdata.mass *= scaleFactor;
+      massdata.I *= scaleFactor;
+
+      body.setMassData(massdata);
     }
   }
 
