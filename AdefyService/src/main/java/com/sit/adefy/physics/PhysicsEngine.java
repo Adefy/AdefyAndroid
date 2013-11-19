@@ -18,18 +18,18 @@ import java.util.ArrayList;
 // Wrapper for BulletPhysics, keeps track of objects and whatnot
 public class PhysicsEngine {
 
-  public static int velIterations = 6;
-  public static int posIterations = 2;
+  public int velIterations = 6;
+  public int posIterations = 2;
 
-  private static Vec2 gravity = new Vec2(0, 0);
-  private static PhysicsThread pThread = null;
+  private Vec2 gravity = new Vec2(0, 0);
+  private PhysicsThread pThread = null;
 
-  private static final ArrayList<BodyQueueDef> bodyCreateQ = new ArrayList<BodyQueueDef>();
-  private static final ArrayList<Body> bodyDestroyQ = new ArrayList<Body>();
+  private final ArrayList<BodyQueueDef> bodyCreateQ = new ArrayList<BodyQueueDef>();
+  private final ArrayList<Body> bodyDestroyQ = new ArrayList<Body>();
 
-  public static AdefyRenderer renderer;
-  private static int bodyCount = 0;
-  private static boolean destroyAll = false;
+  public AdefyRenderer renderer;
+  private int bodyCount = 0;
+  private boolean destroyAll = false;
 
   private static int[] physicsLayers = new int[] {
       0x0001, // 1
@@ -75,7 +75,7 @@ public class PhysicsEngine {
   // Schedules the body for processing before the next world step
   //
   // Creates the world if no bodies currently exist
-  public static void requestBodyCreation(BodyQueueDef bq) {
+  public void requestBodyCreation(BodyQueueDef bq) {
 
     // Ship it to our queue
     bodyCreateQ.add(bq);
@@ -100,23 +100,23 @@ public class PhysicsEngine {
   }
 
   // Queue up
-  public static void destroyBody(Body body) {
+  public void destroyBody(Body body) {
     bodyDestroyQ.add(body);
   }
 
-  public static void destroyAllBodies() {
+  public void destroyAllBodies() {
     if(bodyCount > 0) {
       destroyAll = true;
       bodyCount = 0;
     }
   }
 
-  public static boolean waitingOnDestroy() {
+  public boolean waitingOnDestroy() {
     return destroyAll;
   }
 
   // Thread definition, this is where the physics magic happens
-  private static class PhysicsThread extends Thread {
+  private class PhysicsThread extends Thread {
 
     // Setting this to true exits the internal update loop, and ends the thread
     public boolean stop = false;
@@ -220,14 +220,14 @@ public class PhysicsEngine {
     }
   }
 
-  public static void setGravity(Vec2 grav) {
+  public void setGravity(Vec2 grav) {
     if(pThread != null) {
       pThread.setGravity(grav);
     }
     gravity = grav;
   }
 
-  public static Vec2 getGravity() {
+  public Vec2 getGravity() {
     return gravity;
   }
 }

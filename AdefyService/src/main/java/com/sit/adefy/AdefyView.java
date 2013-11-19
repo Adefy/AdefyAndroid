@@ -86,17 +86,20 @@ public class AdefyView extends GLSurfaceView {
   // Called from constructor
   private void init(Context context, AttributeSet attrs) {
 
+    // Clear any aniamtions
+    AdefyRenderer.animationTimer.cancel();
+    AdefyRenderer.animationTimer.purge();
+
     // Set up renderer and GL ES 2.0
     renderer = new AdefyRenderer();
     setEGLContextClientVersion(2);
     setPreserveEGLContextOnPause(true);
     setRenderer(renderer);
 
-    PhysicsEngine.destroyAllBodies();
-    PhysicsEngine.renderer = renderer;
+    renderer.getPsyx().renderer = renderer;
 
     // Wait for bodies to clear
-    while(PhysicsEngine.waitingOnDestroy()) { }
+    while(renderer.getPsyx().waitingOnDestroy()) { }
 
     if(attrs != null && context.getTheme() != null) {
 

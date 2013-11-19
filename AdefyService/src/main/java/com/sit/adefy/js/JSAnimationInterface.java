@@ -4,6 +4,7 @@ package com.sit.adefy.js;
 // Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
 //
 
+import android.util.Log;
 import android.webkit.JavascriptInterface;
 
 import com.sit.adefy.AdefyRenderer;
@@ -120,11 +121,14 @@ public class JSAnimationInterface {
     if(options.getJSONArray("controlPoints") != null) {
       JSONArray JSON_cpoints = options.getJSONArray("controlPoints");
 
-      cPoints = new Vec2[JSON_cpoints.length()];
+      if(JSON_cpoints.length() > 0) {
+        cPoints = new Vec2[JSON_cpoints.length()];
 
-      for(int p = 0; p < cPoints.length; p++) {
-        cPoints[p].x = JSON_cpoints.getJSONObject(p).getLong("x");
-        cPoints[p].y = JSON_cpoints.getJSONObject(p).getLong("y");
+        for(int p = 0; p < cPoints.length; p++) {
+          cPoints[p] = new Vec2();
+          cPoints[p].x = JSON_cpoints.getJSONObject(p).getLong("x");
+          cPoints[p].y = JSON_cpoints.getJSONObject(p).getLong("y");
+        }
       }
     }
 

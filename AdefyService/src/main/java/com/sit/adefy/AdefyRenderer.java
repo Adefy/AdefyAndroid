@@ -19,6 +19,7 @@ import com.sit.adefy.materials.TexturedMaterial;
 import com.sit.adefy.objects.Actor;
 import com.sit.adefy.objects.Texture;
 import com.sit.adefy.objects.TextureSetQueueItem;
+import com.sit.adefy.physics.PhysicsEngine;
 
 import org.jbox2d.common.Vec2;
 import org.jbox2d.common.Vec3;
@@ -63,12 +64,20 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
   public static float camX;
   public static float camY;
 
+  private PhysicsEngine psyx = null;
+
   public AdefyRenderer() {
     super();
+
+    psyx = new PhysicsEngine();
 
     TexturedMaterial.justUsed = false;
     TexturedMaterial.previousTexture = -1;
     SingleColorMaterial.justUsed = false;
+  }
+
+  public PhysicsEngine getPsyx() {
+    return psyx;
   }
 
   @Override

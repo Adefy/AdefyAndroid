@@ -5,6 +5,7 @@ package com.sit.adefy.js;
 //
 
 import android.app.Activity;
+import android.content.pm.ActivityInfo;
 import android.webkit.JavascriptInterface;
 
 import com.sit.adefy.AdefyRenderer;
@@ -58,6 +59,17 @@ public class JSEngineInterface {
   public void triggerEnd() {
     if(AdefyScene.getMe() != null) {
       AdefyScene.getMe().finish();
+    }
+  }
+
+  @JavascriptInterface
+  public void setOrientation(String o) {
+    if(AdefyScene.getMe() != null) {
+      if(o.equals("portrait")) {
+        AdefyScene.getMe().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+      } else if(o.equals("landscape")) {
+        AdefyScene.getMe().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+      }
     }
   }
 }

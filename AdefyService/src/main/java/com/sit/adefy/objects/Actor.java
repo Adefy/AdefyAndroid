@@ -337,7 +337,7 @@ public class Actor {
     bd.angle = rotation * 0.0174532925f;
 
     // Add to physics world body creation queue, will be finalized when possible
-    PhysicsEngine.requestBodyCreation(new BodyQueueDef(id, bd));
+    renderer.getPsyx().requestBodyCreation(new BodyQueueDef(id, bd));
   }
 
   // Meant to be called by the PhysicsEngine only!
@@ -406,7 +406,7 @@ public class Actor {
 
     if(body == null) { return; }
 
-    PhysicsEngine.destroyBody(body);
+    renderer.getPsyx().destroyBody(body);
     body = null;
   }
 
