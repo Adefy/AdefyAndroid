@@ -55,11 +55,7 @@ public class AdefyScene extends Activity {
     String adName = launchedIntent.getStringExtra("adName");
     String apiKey = launchedIntent.getStringExtra("apiKey");
 
-    // Purely for debugging!
-    // TODO: Remove
-    String adId = launchedIntent.getStringExtra("adId");
-
-    AdefyView mView = new AdefyView(apiKey, adName, adId, this);
+    AdefyView mView = new AdefyView(apiKey, adName, this);
     setContentView(mView);
   }
 

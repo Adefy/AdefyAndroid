@@ -63,15 +63,11 @@ public class AdefyView extends GLSurfaceView {
   //
   // adId is purely for debugging!
   // TODO: Remove adId
-  public AdefyView(String apiKey, String adName, String adId, Context context) {
+  public AdefyView(String apiKey, String adName, Context context) {
     super(context);
 
     if(apiKey != null) { this.apiKey = apiKey; }
     if(adName != null) { this.adName = adName; }
-
-    // Purely for debugging!
-    // TODO: Remove
-    if(adId != null) { this.adId = adId; }
 
     init(context, null);
   }
@@ -129,12 +125,7 @@ public class AdefyView extends GLSurfaceView {
         protected Void doInBackground(Void... voids) {
           AdefyDownloader downloader = new AdefyDownloader(getContext(), apiKey);
 
-          boolean success;
-
-          if(adId != null) { success = downloader.fetchAd(adName, adId); }
-          else { success = downloader.fetchAd(adName); }
-
-          if(!success) {
+          if(!downloader.fetchAd(adName)) {
             Log.e("AdefyView", "Ad fetch failed!");
           } else {
 

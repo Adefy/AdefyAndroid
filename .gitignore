@@ -2,4 +2,5 @@ out
 AdefyService/build
 .idea
 .gradle
-local.properties
+.DS_Store
+build

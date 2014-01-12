@@ -13,20 +13,15 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
-import android.widget.Toast;
-
-import com.sit.adefy.objects.UserInformation;
 
 import org.json.JSONException;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -49,15 +44,10 @@ import javax.net.ssl.X509TrustManager;
  */
 public class AdefyDownloader {
 
-  // TODO: Make this private! It's only public for testing
-  public String serverInterface = "https://cloud.adefy.eu/api/r";
-  private UserInformation uInfo;
+  private String serverInterface = "https://staging.adefy.com/api/v1/serve";
   private Context ctx;
   private String APIKey;
   private String downloadPath;
-
-  // TODO: Remove this!
-  private String adId = null;
 
   // Gathers initial device information, packages it in a string ready to send to the server.
   public AdefyDownloader(Context _ctx, String _apikey) {
@@ -71,8 +61,7 @@ public class AdefyDownloader {
   // folder is provided. Otherwise, unzip
   //
   // Returns success
-  public boolean fetchAd(String folder) { return fetchAd(folder, null); }
-  public boolean fetchAd(String folder, String id) {
+  public boolean fetchAd(String folder) {
     if(!isNetworkAvaliable()) {
 
       Log.e("Adefy", "Can't fetch ad, network not avaliable!");
@@ -80,8 +69,6 @@ public class AdefyDownloader {
     }
 
     genDownloadPath();
-
-    if(id != null) { adId = id; }
 
     try {
 
@@ -123,18 +110,20 @@ public class AdefyDownloader {
   }
 
   // Device UUID, the username, and the screen size is harvested.
-  private void gatherUserInformation() {
+  private String gatherUserInformation() {
 
     // Get display size
     Display display = ((WindowManager)ctx.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
     Point size = new Point();
     display.getSize(size);
 
-    uInfo = new UserInformation();
-    uInfo.uuid = ((TelephonyManager)ctx.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
-    uInfo.username = AccountManager.get(ctx).getAccounts()[0].name;
-    uInfo.screenWidth = size.x;
-    uInfo.screenHeight = size.y;
+    String userInfo = "";
+    userInfo += "?uuid=" + ((TelephonyManager)ctx.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
+    userInfo += "&username=" + AccountManager.get(ctx).getAccounts()[0].name;
+    userInfo += "&width=" + size.x;
+    userInfo += "&height=" + size.y;
+
+    return userInfo;
   }
 
   // Utility
@@ -151,43 +140,18 @@ public class AdefyDownloader {
     return false;
   }
 
-  private HttpsURLConnection establishConnection() throws NoSuchAlgorithmException, KeyManagementException, IOException, JSONException {
+  private HttpsURLConnection establishConnection() throws IOException, KeyManagementException, NoSuchAlgorithmException {
 
     SSLContext sslctx = SSLContext.getInstance("SSL");
     sslctx.init(null, new X509TrustManager[]{new TrustingTrustManager()}, new SecureRandom());
     HttpsURLConnection.setDefaultSSLSocketFactory(sslctx.getSocketFactory());
 
-    URL url = new URL(serverInterface);
-
+    URL url = new URL(serverInterface + gatherUserInformation());
     HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
-    con.setRequestMethod("POST");
-    con.setDoInput(true);
-    con.setDoOutput(true);
     con.setHostnameVerifier(new HostnameVerifier() {
       @Override
       public boolean verify(String hostname, SSLSession session) { return true; }
     });
-
-    String content = "apikey=" + APIKey + "&uinfo=" + uInfo.toJSONString();
-
-    // TODO: Remove
-    if(adId != null) {
-      content += "&id=" + adId;
-    }
-
-    con.setRequestProperty("Content-Length", Integer.toString(content.length()));
-    con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-
-    OutputStream os = con.getOutputStream();
-    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-
-    writer.write(content);
-    writer.flush();
-    os.flush();
-    writer.close();
-    os.close();
-
-    con.connect();
 
     return con;
   }
