@@ -82,7 +82,7 @@ public class AdefyView extends GLSurfaceView {
   // Called from constructor
   private void init(Context context, AttributeSet attrs) {
 
-    // Clear any aniamtions
+    // Clear any animations
     AdefyRenderer.animationTimer.cancel();
     AdefyRenderer.animationTimer.purge();
 
@@ -93,9 +93,6 @@ public class AdefyView extends GLSurfaceView {
     setRenderer(renderer);
 
     renderer.getPsyx().renderer = renderer;
-
-    // Wait for bodies to clear
-    while(renderer.getPsyx().waitingOnDestroy()) { }
 
     if(attrs != null && context.getTheme() != null) {
 
@@ -113,7 +110,7 @@ public class AdefyView extends GLSurfaceView {
     }
 
     if(adName == null) {
-      Log.v("AdefyView", "No ad name provded, manually fetching one...");
+      Log.v("AdefyView", "No ad name provided, manually fetching one...");
 
       // Generate a random name for the fetched ad
       adName = genRandomString(16);
@@ -235,7 +232,7 @@ public class AdefyView extends GLSurfaceView {
 
       public boolean onConsoleMessage(ConsoleMessage cm) {
 
-        Log.d("adefy", cm.message() + " -- line " + cm.lineNumber() + " of " + cm.sourceId());
+        Log.d("adefy", "WebView: " + cm.message() + " -- line " + cm.lineNumber() + " of " + cm.sourceId());
         return true;
       }
     });

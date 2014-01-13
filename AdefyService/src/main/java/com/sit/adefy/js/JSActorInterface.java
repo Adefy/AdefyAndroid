@@ -24,14 +24,17 @@ package com.sit.adefy.js;
 //   enableActorPhysics(Num mass, Num friction, Num elasticity, Num id) -> Bool success
 //   destroyPhysicsBody(Num id) -> Bool success
 
-import android.util.Log;
 import android.webkit.JavascriptInterface;
-import android.widget.Toast;
 
 import com.sit.adefy.AdefyRenderer;
-import com.sit.adefy.objects.Actor;
+import com.sit.adefy.actors.Actor;
+import com.sit.adefy.actors.CircleActor;
+import com.sit.adefy.actors.PolygonActor;
+import com.sit.adefy.actors.RectangleActor;
+import com.sit.adefy.actors.TextActor;
 import com.sit.adefy.objects.Color3;
 
+import org.jbox2d.collision.shapes.CircleShape;
 import org.jbox2d.common.Vec2;
 
 // For full, proper documentation, check the AWGL implementation
@@ -53,11 +56,8 @@ public class JSActorInterface {
     return null;
   }
 
-  @JavascriptInterface
-  public int createActor(String verts, String texVerts) {
-
-    // Generate vert array
-    // Verts are seperated by commas
+  private float[] parseVertJSON(String verts) {
+    // Verts are separated by commas
     String[] vertsArray = verts.split(",");
     float[] _verts = new float[vertsArray.length];
 
@@ -74,9 +74,43 @@ public class JSActorInterface {
       _verts[i] = Float.parseFloat(vert);
     }
 
-    // Ship actor
+    return _verts;
+  }
+
+  @JavascriptInterface
+  public int createPolygonActor(String verts) {
+    float[] _verts = parseVertJSON(verts);
     int id = getNextID();
-    new Actor(renderer, id, _verts);
+
+    new PolygonActor(renderer, id, _verts);
+
+    return id;
+  }
+
+  @JavascriptInterface
+  public int createRectangleActor(float width, float height) {
+    int id = getNextID();
+
+    new RectangleActor(renderer, id, width, height);
+
+    return id;
+  }
+
+  @JavascriptInterface
+  public int createCircleActor(String verts, float radius) {
+    float[] _verts = parseVertJSON(verts);
+    int id = getNextID();
+
+    new CircleActor(renderer, id, _verts, radius);
+
+    return id;
+  }
+
+  @JavascriptInterface
+  public int createTextActor(String text, int size, int r, int g, int b) {
+    int id = getNextID();
+
+    new TextActor(renderer, id, text, size, new Color3(r, g, b));
 
     return id;
   }
@@ -268,7 +302,6 @@ public class JSActorInterface {
 
     // Esure the renderer has the texture loaded
     if(!renderer.textureExists(name)) {
-      Log.d("adefy", "Queueing texture set for " + name);
       renderer.queueTextureSet(a, name);
       return false;
     }

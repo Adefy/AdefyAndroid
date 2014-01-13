@@ -4,6 +4,8 @@ package com.sit.adefy.objects;
 // Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
 //
 
+import com.sit.adefy.actors.Actor;
+
 public class TextureSetQueueItem {
 
   private static int idTrack;

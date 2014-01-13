@@ -12,11 +12,11 @@ import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
 import android.opengl.Matrix;
 import android.util.Log;
-import android.view.inputmethod.ExtractedTextRequest;
 
+import com.sit.adefy.actors.TextActor;
 import com.sit.adefy.materials.SingleColorMaterial;
 import com.sit.adefy.materials.TexturedMaterial;
-import com.sit.adefy.objects.Actor;
+import com.sit.adefy.actors.Actor;
 import com.sit.adefy.objects.Texture;
 import com.sit.adefy.objects.TextureSetQueueItem;
 import com.sit.adefy.physics.PhysicsEngine;
@@ -24,7 +24,6 @@ import com.sit.adefy.physics.PhysicsEngine;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.common.Vec3;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -32,7 +31,8 @@ import javax.microedition.khronos.opengles.GL10;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Timer;
 
@@ -279,82 +279,117 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
   private void reloadTextures() {
     if(textureJSON == null) { return; }
 
-    // Clear textures
     textures.clear();
 
-    Log.v("adefy", "reloading textures (" + textureJSON.length() + ")");
+    reloadManifestTextures();
+    TextActor.reloadTextures();
+
+    textureLoadQueued = false;
+  }
+
+  private void reloadManifestTextures() {
     for (int i = 0; i < textureJSON.length(); i++)  {
 
       try {
 
         // Only supports single image-per-texture loading for now!
         JSONObject tex = textureJSON.getJSONObject(i);
+
+        String name = tex.getString("name");
         String type = tex.getString("type");
         String compression = tex.getString("compression");
+        String path = texturePath + "/" + tex.getString("path");
 
-        if(!type.equals("image")) {
-          Log.d("AdefyRenderer", "Can't load texture, unsupported type: " + type);
-        } else if(!compression.equals("none") && !compression.equals("etc1")) {
-          Log.d("AdefyRenderer", "Can't load texture, unsupported compression: " + compression);
-        } else {
-
-          // Generate texture, set settings and such
-          Texture texture = new Texture(tex.getString("name"));
-          GLES20.glGenTextures(1, texture.getHandle(), 0);
-
-          GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture.getHandle()[0]);
-
-          // Setup texture options
-          GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-          GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-
-          // Image, load up
-          if(compression.equals("none")) {
-
-            // Create bitmap
-            Bitmap bitmap = BitmapFactory.decodeFile(texturePath + "/" + tex.getString("path"));
-            GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, bitmap, 0);
-            bitmap.recycle();
-
-          } else if(compression.equals("etc1")) {
-
-            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
-
-            // Create ETC1
-            FileInputStream stream = new FileInputStream(new File(texturePath + "/" + tex.getString("path")));
-            ETC1Util.loadTexture(GLES20.GL_TEXTURE_2D, 0, 0, GLES20.GL_RGB, GLES20.GL_UNSIGNED_SHORT_5_6_5, stream);
-            stream.close();
-          }
-
-          textures.add(texture);
-
-          synchronized (textureSetQueue) {
-
-            // Go through and apply any pending texture sets
-            ArrayList<TextureSetQueueItem> remove = new ArrayList<TextureSetQueueItem>();
-
-            for(TextureSetQueueItem request: textureSetQueue) {
-
-              if(request.getName().equals(texture.getName())) {
-                request.apply();
-                remove.add(request);
-              }
-            }
-
-            for(TextureSetQueueItem req : remove) {
-              textureSetQueue.remove(req);
-            }
-
-            remove.clear();
-          }
-        }
+        loadAndCreateTexture(name, path, type, compression);
 
       } catch (Exception e) {
         e.printStackTrace();
       }
     }
+  }
 
-    textureLoadQueued = false;
+  public Texture loadAndCreateTexture(String name, String path, String type, String compression) throws IOException {
+
+    Texture texture = null;
+
+    if(!type.equals("image")) {
+      Log.d("AdefyRenderer", "Can't load texture, unsupported type: " + type);
+    } else if(!compression.equals("none") && !compression.equals("etc1")) {
+      Log.d("AdefyRenderer", "Can't load texture, unsupported compression: " + compression);
+    } else {
+
+      texture = _newTexture(name);
+      _applyTextureOptions();
+
+      // Image, load up
+      if(compression.equals("none")) {
+
+        // Create bitmap
+        Bitmap bitmap = BitmapFactory.decodeFile(path);
+        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, bitmap, 0);
+        bitmap.recycle();
+
+      } else if(compression.equals("etc1")) {
+
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+
+        // Create ETC1
+        FileInputStream stream = new FileInputStream(new File(path));
+        ETC1Util.loadTexture(GLES20.GL_TEXTURE_2D, 0, 0, GLES20.GL_RGB, GLES20.GL_UNSIGNED_SHORT_5_6_5, stream);
+        stream.close();
+      }
+
+      textures.add(texture);
+      applyTextureSets(texture.getName());
+    }
+
+    return texture;
+  }
+
+  public Texture createTextureFromBitmap(String name, Bitmap bitmap) {
+
+    Texture texture = _newTexture(name);
+    _applyTextureOptions();
+
+    GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, bitmap, 0);
+
+    return texture;
+  }
+
+  private void _applyTextureOptions() {
+    GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+    GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+  }
+
+  private Texture _newTexture(String name) {
+    Texture texture = new Texture(name);
+    GLES20.glGenTextures(1, texture.getHandle(), 0);
+    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture.getHandle()[0]);
+
+    return texture;
+  }
+
+  private void _textureFromETC1File(String path) {}
+
+  private void applyTextureSets(String textureName) {
+    synchronized (textureSetQueue) {
+
+      ArrayList<TextureSetQueueItem> appliedSets = new ArrayList<TextureSetQueueItem>();
+
+      for(TextureSetQueueItem request: textureSetQueue) {
+
+        if(request.getName().equals(textureName)) {
+          request.apply();
+          appliedSets.add(request);
+        }
+      }
+
+      for(TextureSetQueueItem req : appliedSets) {
+        textureSetQueue.remove(req);
+      }
+
+      appliedSets.clear();
+    }
   }
 }

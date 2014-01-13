@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
+import org.apache.http.protocol.HTTP;
 import org.json.JSONException;
 
 import java.io.File;
@@ -21,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.KeyManagementException;
@@ -45,6 +47,7 @@ import javax.net.ssl.X509TrustManager;
 public class AdefyDownloader {
 
   private String serverInterface = "https://staging.adefy.com/api/v1/serve";
+  //private String serverInterface = "http://192.168.0.16:8080/api/v1/serve";
   private Context ctx;
   private String APIKey;
   private String downloadPath;
@@ -155,6 +158,12 @@ public class AdefyDownloader {
 
     return con;
   }
+
+  // private HttpURLConnection establishConnection() throws IOException {
+  //   URL url = new URL(serverInterface + gatherUserInformation());
+  //   HttpURLConnection con = (HttpURLConnection) url.openConnection();
+  //   return con;
+  // }
 
   private void downloadArchive(HttpsURLConnection con) throws IOException {
 

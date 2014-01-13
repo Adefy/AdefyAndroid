@@ -6,6 +6,7 @@ package com.sit.adefy.js;
 
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
+import android.util.Log;
 import android.webkit.JavascriptInterface;
 
 import com.sit.adefy.AdefyRenderer;

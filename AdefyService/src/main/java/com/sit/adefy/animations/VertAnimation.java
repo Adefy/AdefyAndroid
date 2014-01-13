@@ -7,8 +7,7 @@ package com.sit.adefy.animations;
 import android.util.Log;
 
 import com.sit.adefy.AdefyRenderer;
-import com.sit.adefy.AdefyScene;
-import com.sit.adefy.objects.Actor;
+import com.sit.adefy.actors.Actor;
 
 import java.util.ArrayList;
 import java.util.TimerTask;

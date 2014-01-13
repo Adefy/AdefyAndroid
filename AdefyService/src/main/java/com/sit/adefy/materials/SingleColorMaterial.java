@@ -5,11 +5,13 @@ package com.sit.adefy.materials;
 //
 
 import android.opengl.GLES20;
+import android.util.Log;
 
 import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.objects.Color3;
 
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 
 // Renders an actor in a single color
 public class SingleColorMaterial extends Material {
@@ -54,7 +56,6 @@ public class SingleColorMaterial extends Material {
   public SingleColorMaterial() { this(new Color3(255, 255, 255)); }
   public SingleColorMaterial(Color3 color) {
     super(name);
-
     this.color = color;
   }
 
@@ -81,26 +82,31 @@ public class SingleColorMaterial extends Material {
 
   public void draw(FloatBuffer vertBuffer, int vertCount, int mode, float[] modelView) {
 
-    // Set up handles
-    GLES20.glUniformMatrix4fv(projectionHandle, 1, false, AdefyRenderer.getProjection(), 0);
-    GLES20.glUniformMatrix4fv(modelHandle, 1, false, modelView, 0);
-    GLES20.glUniform4fv(colorHandle, 1, color.toFloatArray(), 0);
+    try {
 
-    GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, vertBuffer);
+      // Set up handles
+      GLES20.glUniformMatrix4fv(projectionHandle, 1, false, AdefyRenderer.getProjection(), 0);
+      GLES20.glUniformMatrix4fv(modelHandle, 1, false, modelView, 0);
+      GLES20.glUniform4fv(colorHandle, 1, color.toFloatArray(), 0);
 
-    if(!SingleColorMaterial.justUsed) {
-      if(TexturedMaterial.justUsed) { TexturedMaterial.postFinalDraw(); }
-      TexturedMaterial.justUsed = false;
-
-      SingleColorMaterial.justUsed = true;
-
+      GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, vertBuffer);
       GLES20.glEnableVertexAttribArray(positionHandle);
+
+      if(!SingleColorMaterial.justUsed) {
+        if(TexturedMaterial.justUsed) { TexturedMaterial.postFinalDraw(); }
+        TexturedMaterial.justUsed = false;
+        SingleColorMaterial.justUsed = true;
+      }
+
+      // Draw!
+      GLES20.glDrawArrays(mode, 0, vertCount);
+
+      GLES20.glDisableVertexAttribArray(positionHandle);
+
+    } catch (Exception e) {
+      Log.d("Adefy", "SCM Exception");
+      e.printStackTrace();
     }
-
-    // Draw!
-    GLES20.glDrawArrays(mode, 0, vertCount);
-
-    GLES20.glDisableVertexAttribArray(positionHandle);
   }
 
   // Called by other materials if we were just drawing

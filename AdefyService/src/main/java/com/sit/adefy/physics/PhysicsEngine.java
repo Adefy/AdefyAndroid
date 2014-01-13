@@ -1,31 +1,33 @@
 package com.sit.adefy.physics;
 
 //
-// Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
+// Copyright Â© 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
 //
 
-import android.util.Log;
-
 import com.sit.adefy.AdefyRenderer;
-import com.sit.adefy.objects.Actor;
+import com.sit.adefy.actors.Actor;
+import com.sit.adefy.actors.CircleActor;
 
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.World;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 // Wrapper for BulletPhysics, keeps track of objects and whatnot
 public class PhysicsEngine {
 
-  public int velIterations = 6;
-  public int posIterations = 2;
+  public int velIterations = 1;
+  public int posIterations = 1;
 
-  private Vec2 gravity = new Vec2(0, 0);
   private PhysicsThread pThread = null;
 
   private final ArrayList<BodyQueueDef> bodyCreateQ = new ArrayList<BodyQueueDef>();
   private final ArrayList<Body> bodyDestroyQ = new ArrayList<Body>();
+  private final ArrayList<BodyQueueDef> bodyCreateQOverflow = new ArrayList<BodyQueueDef>();
 
   public AdefyRenderer renderer;
   private int bodyCount = 0;
@@ -77,16 +79,16 @@ public class PhysicsEngine {
   // Creates the world if no bodies currently exist
   public void requestBodyCreation(BodyQueueDef bq) {
 
-    // Ship it to our queue
-    bodyCreateQ.add(bq);
+    bodyCreateQOverflow.add(bq);
 
     if(bodyCount == 0) {
 
       // If the thread already exists, then wait for it to finish running before re-creating
       // Technically one could just restart the thread, but recreating is simpler
       if(pThread != null) {
-        destroyAll = true;
-        while(pThread.isRunning()) { }
+        while(pThread.isRunning()) {
+          destroyAll = true;
+        }
       }
 
       destroyAll = false;
@@ -104,17 +106,6 @@ public class PhysicsEngine {
     bodyDestroyQ.add(body);
   }
 
-  public void destroyAllBodies() {
-    if(bodyCount > 0) {
-      destroyAll = true;
-      bodyCount = 0;
-    }
-  }
-
-  public boolean waitingOnDestroy() {
-    return destroyAll;
-  }
-
   // Thread definition, this is where the physics magic happens
   private class PhysicsThread extends Thread {
 
@@ -129,20 +120,6 @@ public class PhysicsEngine {
     private World physicsWorld = null;
 
     public boolean isRunning() { return running; }
-
-    public void setGravity(Vec2 grav) {
-      if(physicsWorld != null) {
-        physicsWorld.setGravity(grav);
-      }
-    }
-
-    public Vec2 getGravity() {
-      if(physicsWorld != null) {
-        return physicsWorld.getGravity();
-      } else {
-        return null;
-      }
-    }
 
     @Override
     public void run() {
@@ -179,20 +156,37 @@ public class PhysicsEngine {
         try {
 
           if(bodyCreateQ.size() > 0) {
-            synchronized (bodyCreateQ) {
 
-                // Handle creations
-                for (BodyQueueDef bq : bodyCreateQ) {
-                  for (Actor a : renderer.actors) {
+            List<BodyQueueDef> createList = Collections.synchronizedList(bodyCreateQ);
+            synchronized (createList) {
+              Iterator<BodyQueueDef> bqIt = createList.iterator();
+
+              // Handle creations
+              while(bqIt.hasNext()) {
+                BodyQueueDef bq = bqIt.next();
+
+                List<Actor> actorList = Collections.synchronizedList(renderer.actors);
+                synchronized (actorList) {
+                  Iterator<Actor> aIt = actorList.iterator();
+
+                  while(aIt.hasNext()) {
+                    Actor a = aIt.next();
+
                     if(a.getId() == bq.getActorID()) {
                       a.onBodyCreation(physicsWorld.createBody(bq.getBd()));
                       break;
                     }
                   }
                 }
+              }
 
               bodyCreateQ.clear();
+              bodyCreateQ.addAll(bodyCreateQOverflow);
+              bodyCreateQOverflow.clear();
             }
+          } else {
+            bodyCreateQ.addAll(bodyCreateQOverflow);
+            bodyCreateQOverflow.clear();
           }
 
         } catch (Exception e) {
@@ -218,16 +212,5 @@ public class PhysicsEngine {
 
       running = false;
     }
-  }
-
-  public void setGravity(Vec2 grav) {
-    if(pThread != null) {
-      pThread.setGravity(grav);
-    }
-    gravity = grav;
-  }
-
-  public Vec2 getGravity() {
-    return gravity;
   }
 }

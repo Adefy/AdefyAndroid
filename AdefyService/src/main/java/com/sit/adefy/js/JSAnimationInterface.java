@@ -4,13 +4,12 @@ package com.sit.adefy.js;
 // Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
 //
 
-import android.util.Log;
 import android.webkit.JavascriptInterface;
 
 import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.animations.BezAnimation;
 import com.sit.adefy.animations.VertAnimation;
-import com.sit.adefy.objects.Actor;
+import com.sit.adefy.actors.Actor;
 
 import org.jbox2d.common.Vec2;
 import org.json.JSONArray;
