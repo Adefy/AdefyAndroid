@@ -45,9 +45,9 @@ public class RectangleActor extends Actor {
   @Override
   protected void generateUVs() {
     texVerts = new float[]{
-        0.0f, 0.0f,
-        1.0f, 0.0f,
         1.0f, 1.0f,
+        1.0f, 0.0f,
+        0.0f, 0.0f,
         0.0f, 1.0f,
     };
   }
