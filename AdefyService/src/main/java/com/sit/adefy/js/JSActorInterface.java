@@ -7,7 +7,7 @@ package com.sit.adefy.js;
 //   createActor(String verts) -> Num id
 //   attachTexture(String texture, Num w, Num h, Num x, Num y, Num angle, Num id) -> Bool success
 //   removeAttachment(Num id) -> Bool success
-//   setAttachmentVisiblity(Bool visible, Num id) -> Bool success
+//   setAttachmentVisibility(Bool visible, Num id) -> Bool success
 //   setActorLayer(Num layer, Num id) -> Bool success
 //   setActorPhysicsLayer(Num layer, Num id) -> Bool success
 //   updateVertices(String verts, Num id) -> Bool success
@@ -24,6 +24,7 @@ package com.sit.adefy.js;
 //   enableActorPhysics(Num mass, Num friction, Num elasticity, Num id) -> Bool success
 //   destroyPhysicsBody(Num id) -> Bool success
 
+import android.util.Log;
 import android.webkit.JavascriptInterface;
 
 import com.sit.adefy.AdefyRenderer;
@@ -97,9 +98,11 @@ public class JSActorInterface {
   }
 
   @JavascriptInterface
-  public int createCircleActor(String verts, float radius) {
+  public int createCircleActor(float radius, String verts) {
     float[] _verts = parseVertJSON(verts);
     int id = getNextID();
+
+    Log.d("Adefy", "GOT CIRCLE ACTOR CREATION REQUEST: " + radius);
 
     new CircleActor(renderer, id, _verts, radius);
 

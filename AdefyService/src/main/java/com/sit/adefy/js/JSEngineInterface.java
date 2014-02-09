@@ -11,15 +11,18 @@ import android.webkit.JavascriptInterface;
 
 import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.AdefyScene;
+import com.sit.adefy.AdefyView;
 
 import org.jbox2d.common.Vec3;
 
 public class JSEngineInterface {
 
   private AdefyRenderer renderer;
+  private AdefyView view;
 
-  public JSEngineInterface(AdefyRenderer renderer) {
+  public JSEngineInterface(AdefyRenderer renderer, AdefyView view) {
     this.renderer = renderer;
+    this.view = view;
   }
 
   @JavascriptInterface
@@ -38,6 +41,11 @@ public class JSEngineInterface {
   public String getClearColor() {
     Vec3 col = AdefyRenderer.clearCol;
     return "{ r: " + col.x + ", g: " + col.y + ", b: " + col.z + " }";
+  }
+
+  @JavascriptInterface
+  public void setRemindMeButton(float x, float y, float w, float h) {
+    view.setRemindMeButton(x, y, w, h);
   }
 
   @JavascriptInterface

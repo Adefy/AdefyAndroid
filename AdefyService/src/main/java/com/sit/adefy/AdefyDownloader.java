@@ -46,16 +46,23 @@ import javax.net.ssl.X509TrustManager;
  */
 public class AdefyDownloader {
 
-  private String serverInterface = "https://staging.adefy.com/api/v1/serve";
-  //private String serverInterface = "http://192.168.0.16:8080/api/v1/serve";
+  private String serverInterface;
   private Context ctx;
   private String APIKey;
   private String downloadPath;
 
   // Gathers initial device information, packages it in a string ready to send to the server.
   public AdefyDownloader(Context _ctx, String _apikey) {
+    this(_ctx, _apikey, "https://app.adefy.com/api/v1/serve");
+  }
+
+  // Constructor that breaks out the server URL.
+  // For staging, use https://app.adefy.com/api/v1/serve
+  // For testing, use http://192.168.0.16:8080/api/v1/serve (with actual local IP)
+  public AdefyDownloader(Context _ctx, String _apikey, String _serverURL) {
     this.ctx = _ctx;
     this.APIKey = _apikey;
+    this.serverInterface = _serverURL;
 
     gatherUserInformation();
   }
@@ -121,6 +128,11 @@ public class AdefyDownloader {
     display.getSize(size);
 
     String userInfo = "";
+
+    if(APIKey != null) {
+      userInfo = "/" + APIKey;
+    }
+
     userInfo += "?uuid=" + ((TelephonyManager)ctx.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
     userInfo += "&username=" + AccountManager.get(ctx).getAccounts()[0].name;
     userInfo += "&width=" + size.x;
@@ -143,29 +155,31 @@ public class AdefyDownloader {
     return false;
   }
 
-  private HttpsURLConnection establishConnection() throws IOException, KeyManagementException, NoSuchAlgorithmException {
-
-    SSLContext sslctx = SSLContext.getInstance("SSL");
-    sslctx.init(null, new X509TrustManager[]{new TrustingTrustManager()}, new SecureRandom());
-    HttpsURLConnection.setDefaultSSLSocketFactory(sslctx.getSocketFactory());
+  private HttpURLConnection establishConnection() throws IOException, KeyManagementException, NoSuchAlgorithmException {
 
     URL url = new URL(serverInterface + gatherUserInformation());
-    HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
-    con.setHostnameVerifier(new HostnameVerifier() {
-      @Override
-      public boolean verify(String hostname, SSLSession session) { return true; }
-    });
 
-    return con;
+    Log.d("Adefy", "Fetching ad: " + serverInterface + gatherUserInformation());
+
+    if(url.getProtocol().equals("https")) {
+      SSLContext sslctx = SSLContext.getInstance("SSL");
+      sslctx.init(null, new X509TrustManager[]{new TrustingTrustManager()}, new SecureRandom());
+
+      HttpsURLConnection.setDefaultSSLSocketFactory(sslctx.getSocketFactory());
+      HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+
+      con.setHostnameVerifier(new HostnameVerifier() {
+        @Override
+        public boolean verify(String hostname, SSLSession session) { return true; }
+      });
+
+      return con;
+    } else {
+      return (HttpURLConnection) url.openConnection();
+    }
   }
 
-  // private HttpURLConnection establishConnection() throws IOException {
-  //   URL url = new URL(serverInterface + gatherUserInformation());
-  //   HttpURLConnection con = (HttpURLConnection) url.openConnection();
-  //   return con;
-  // }
-
-  private void downloadArchive(HttpsURLConnection con) throws IOException {
+  private void downloadArchive(HttpURLConnection con) throws IOException {
 
     // Create file in our cache
     File tempArchive = File.createTempFile(downloadPath, ".ttx", ctx.getCacheDir());

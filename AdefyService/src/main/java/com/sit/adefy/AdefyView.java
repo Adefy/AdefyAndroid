@@ -4,33 +4,36 @@ package com.sit.adefy;
 // Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
 //
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.TypedArray;
 import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.WindowManager;
+import android.view.MotionEvent;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
-import android.widget.TextView;
 
 import com.sit.adefy.js.JSActorInterface;
 import com.sit.adefy.js.JSAnimationInterface;
 import com.sit.adefy.js.JSEngineInterface;
-import com.sit.adefy.physics.PhysicsEngine;
 
-import org.jbox2d.common.Vec3;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.Timer;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.GregorianCalendar;
 
 public class AdefyView extends GLSurfaceView {
 
@@ -39,15 +42,26 @@ public class AdefyView extends GLSurfaceView {
 
   private String adName = null;
   private String apiKey = null;
-
-  // Purely for debugging!
-  // TODO: Remove
-  private String adId = null;
+  private String serverInterface = null;
 
   private String adSourcePath;
   private String adefySourcePath;
 
+  private String adIcon = null;
+  private String impressionURL;
+  private String clickURL;
+  private String pushTitle;
+  private String pushDesc;
+  private String pushURL;
+
   private StringBuilder adRuntime;
+  private JSONArray textureArray = null;
+
+  private Boolean clicked = false;
+  private float remindMeButtonX = -1;
+  private float remindMeButtonY = -1;
+  private float remindMeButtonW = 0;
+  private float remindMeButtonH = 0;
 
   // Interfaces!
   private String ifaceDef =
@@ -60,20 +74,25 @@ public class AdefyView extends GLSurfaceView {
 
   // Sets up a renderer, checks for a supplied ad name. If none is found, requests an ad using
   // AdefyDownloader, and then proceeds with that.
-  //
-  // adId is purely for debugging!
-  // TODO: Remove adId
-  public AdefyView(String apiKey, String adName, Context context) {
+  public AdefyView(String apiKey, String adName, String serverInterface, Context context) {
     super(context);
 
     if(apiKey != null) { this.apiKey = apiKey; }
     if(adName != null) { this.adName = adName; }
+    if(serverInterface != null) { this.serverInterface = serverInterface; }
 
     init(context, null);
   }
   public AdefyView(Context context, AttributeSet attrs) {
     super(context, attrs);
     init(context, attrs);
+  }
+
+  public void setRemindMeButton(float x, float y, float w, float h) {
+    remindMeButtonX = x;
+    remindMeButtonY = y;
+    remindMeButtonW = w;
+    remindMeButtonH = h;
   }
 
   // Used to run postInit() on the UI Thread from the AsyncTask responsible for downloading
@@ -120,7 +139,7 @@ public class AdefyView extends GLSurfaceView {
 
         @Override
         protected Void doInBackground(Void... voids) {
-          AdefyDownloader downloader = new AdefyDownloader(getContext(), apiKey);
+          AdefyDownloader downloader = new AdefyDownloader(getContext(), apiKey, serverInterface);
 
           if(!downloader.fetchAd(adName)) {
             Log.e("AdefyView", "Ad fetch failed!");
@@ -186,9 +205,21 @@ public class AdefyView extends GLSurfaceView {
       }
 
       JSONObject manifestObj = new JSONObject(sb.toString());
+
       adSourcePath = manifestObj.getString("ad");
       adefySourcePath = manifestObj.getString("lib");
-      JSONArray textureArray = manifestObj.getJSONArray("textures");
+      impressionURL = manifestObj.getString("impression");
+      clickURL = manifestObj.getString("click");
+
+      pushTitle = manifestObj.getString("pushTitle");
+      pushDesc = manifestObj.getString("pushDesc");
+      pushURL = manifestObj.getString("pushURL");
+
+      adIcon = manifestObj.getString("pushIcon");
+
+      Log.d("Adefy", "Got icon: " + adIcon);
+
+      textureArray = manifestObj.getJSONArray("textures");
 
       // Send texture information to renderer
       renderer.setTextureInfo(textureArray, getContext().getCacheDir() + "/" + adName);
@@ -241,7 +272,7 @@ public class AdefyView extends GLSurfaceView {
     web.addJavascriptInterface(new WebViewLoadNotify(), "__iface_load");
 
     // AJS intefaces
-    web.addJavascriptInterface(new JSEngineInterface(renderer), "__iface_engine");
+    web.addJavascriptInterface(new JSEngineInterface(renderer, this), "__iface_engine");
     web.addJavascriptInterface(new JSActorInterface(renderer), "__iface_actors");
     web.addJavascriptInterface(new JSAnimationInterface(renderer), "__iface_animations");
 
@@ -256,6 +287,9 @@ public class AdefyView extends GLSurfaceView {
     // Inject!
     web.loadDataWithBaseURL(null, "", null, "utf-8", null);
     web.loadUrl(loadJS);
+
+    // Register impression!
+    registerImpression();
   }
 
   final Handler onLoadHandler = new Handler();
@@ -287,5 +321,111 @@ public class AdefyView extends GLSurfaceView {
 
     // Now our runtime
     web.loadUrl(adRuntime.toString());
+  }
+
+  // Call the impression URL we were provided
+  private void registerImpression() {
+    if(impressionURL.length() == 0) { return; }
+
+    new AsyncTask<Void, Void, Void>() {
+
+      @Override
+      protected Void doInBackground(Void...arg0) {
+
+        try {
+          Log.d("Adefy", "Registering impression: " + impressionURL);
+
+          URL url = new URL(impressionURL);
+          HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+          InputStream input = con.getInputStream();
+          byte data[] = new byte[1024];
+          while(input.read(data, 0, 1024) != -1) {}
+          input.close();
+
+        } catch (Exception e) {
+          e.printStackTrace();
+          Log.e("Adefy", "Failed to register impression! " + impressionURL);
+        }
+
+        return null;
+      }
+    }.execute();
+  }
+
+  // Call the click URL we were provided
+  private void registerClick() {
+    if(clicked) { return; }
+    if(clickURL.length() == 0) { return; }
+
+    new AsyncTask<Void, Void, Void>() {
+
+      @Override
+      protected Void doInBackground(Void...arg0) {
+
+        try {
+          Log.d("Adefy", "Registering click: " + clickURL);
+          clicked = true;
+
+          // Register click with server
+          URL url = new URL(clickURL);
+          HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+          InputStream input = con.getInputStream();
+          byte data[] = new byte[1024];
+          while(input.read(data, 0, 1024) != -1) {}
+          input.close();
+
+          // Schedule notification
+          Long time = new GregorianCalendar().getTimeInMillis() + (60 * 60 * 1000);
+          Intent intentAlarm = new Intent(getContext(), AdefyReminder.class);
+
+          if(adIcon != null) {
+            for(int i = 0; i < textureArray.length(); i++) {
+              JSONObject texture = textureArray.getJSONObject(i);
+
+              if(texture.getString("name").equals(adIcon)) {
+                String iconPath = texture.getString("path");
+                intentAlarm.putExtra("icon", getContext().getCacheDir() + "/" + adName + "/" + iconPath);
+                break;
+              }
+            }
+          }
+
+          intentAlarm.putExtra("title", pushTitle);
+          intentAlarm.putExtra("desc", pushDesc);
+          intentAlarm.putExtra("url", pushURL);
+
+          AlarmManager alarmManager = (AlarmManager) getContext().getSystemService(Context.ALARM_SERVICE);
+          alarmManager.set(AlarmManager.RTC_WAKEUP,time, PendingIntent.getBroadcast(getContext(), 1, intentAlarm, PendingIntent.FLAG_UPDATE_CURRENT));
+
+        } catch (Exception e) {
+          e.printStackTrace();
+          Log.e("Adefy", "Failed to register click! " + clickURL);
+        }
+
+        return null;
+      }
+    }.execute();
+  }
+
+  @Override
+  public boolean onTouchEvent(MotionEvent event) {
+    int action = event.getAction();
+
+    if(action == MotionEvent.ACTION_DOWN && !clicked) {
+      float x = event.getX();
+      float y = event.getY();
+
+      if(x >= remindMeButtonX && y >= remindMeButtonY) {
+        if(x <= remindMeButtonX + remindMeButtonW && y <= remindMeButtonY + remindMeButtonH) {
+          registerClick();
+        }
+      }
+    }
+
+    registerClick();
+
+    return true;
   }
 }

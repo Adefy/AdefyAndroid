@@ -54,8 +54,13 @@ public class AdefyScene extends Activity {
     Intent launchedIntent = getIntent();
     String adName = launchedIntent.getStringExtra("adName");
     String apiKey = launchedIntent.getStringExtra("apiKey");
+    String serverInterface = "https://app.adefy.com/api/v1/serve";
 
-    AdefyView mView = new AdefyView(apiKey, adName, this);
+    if(launchedIntent.getStringExtra("server") != null) {
+      serverInterface = launchedIntent.getStringExtra("server");
+    }
+
+    AdefyView mView = new AdefyView(apiKey, adName, serverInterface, this);
     setContentView(mView);
   }
 
