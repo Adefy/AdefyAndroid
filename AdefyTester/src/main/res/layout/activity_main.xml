@@ -1,0 +1,35 @@
+<LinearLayout
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="#0099cc"
+    android:gravity="center_horizontal">
+
+    <ImageView
+        android:layout_width="183dp"
+        android:layout_height="129dp"
+        android:id="@+id/imageView"
+        android:layout_gravity="center"
+        android:src="@drawable/adefy_header"
+        android:contentDescription="Adefy"
+        android:layout_marginTop="32dp" android:layout_marginBottom="64dp"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Fetch Local Ad"
+        android:id="@+id/fetchLocalButton" android:textColor="#fff"
+        android:layout_marginBottom="16dp"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Fetch Staging Ad"
+        android:id="@+id/fetchStagingButton" android:textColor="#fff"
+        android:layout_marginBottom="16dp"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Fetch Production Ad"
+        android:id="@+id/fetchProductionButton" android:textColor="#fff"/>
+
+</LinearLayout>
