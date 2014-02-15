@@ -2,11 +2,11 @@ apply plugin: 'android'
 
 android {
     compileSdkVersion 19
-    buildToolsVersion '19.0.0'
+    buildToolsVersion "19.0.0"
 
     defaultConfig {
         minSdkVersion 13
-        targetSdkVersion 19
+        targetSdkVersion 16
         versionCode 1
         versionName "1.0"
     }
@@ -27,5 +27,6 @@ repositories {
 
 dependencies {
     compile 'com.android.support:appcompat-v7:+'
+    compile fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
     compile 'com.sit.adefy:AdefyLib:1.0.1@aar'
 }

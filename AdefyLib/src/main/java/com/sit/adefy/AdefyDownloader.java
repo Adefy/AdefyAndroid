@@ -46,19 +46,25 @@ public class AdefyDownloader {
   private Context ctx;
   private String APIKey;
   private String downloadPath;
+  private String adType = null;
 
   // Gathers initial device information, packages it in a string ready to send to the server.
   public AdefyDownloader(Context _ctx, String _apikey) {
-    this(_ctx, _apikey, "https://app.adefy.com/api/v1/serve");
+    this(_ctx, _apikey, "https://app.adefy.com/api/v1/serve", null);
+  }
+
+  public AdefyDownloader(Context _ctx, String _apikey, String _adType) {
+    this(_ctx, _apikey, "https://app.adefy.com/api/v1/serve", _adType);
   }
 
   // Constructor that breaks out the server URL.
   // For staging, use https://app.adefy.com/api/v1/serve
   // For testing, use http://192.168.0.16:8080/api/v1/serve (with actual local IP)
-  public AdefyDownloader(Context _ctx, String _apikey, String _serverURL) {
+  public AdefyDownloader(Context _ctx, String _apikey, String _serverURL, String _adType) {
     this.ctx = _ctx;
     this.APIKey = _apikey;
     this.serverInterface = _serverURL;
+    this.adType = _adType;
 
     gatherUserInformation();
   }
@@ -121,6 +127,10 @@ public class AdefyDownloader {
     userInfo += "?uuid=" + ((TelephonyManager)ctx.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
     userInfo += "&width=" + size.x;
     userInfo += "&height=" + size.y;
+
+    if(adType != null) {
+      userInfo += "&type=" + adType;
+    }
 
     try {
       AccountManager accountManager = AccountManager.get(ctx);
@@ -209,13 +219,10 @@ public class AdefyDownloader {
     // Operate on each entry
     while((ze = zin.getNextEntry()) != null) {
 
+      // Create directory
+      new File(ctx.getCacheDir() + "/" + dir).mkdirs();
+
       // Write file
-      File fout_dirCreation = new File(ctx.getCacheDir() + "/" + dir);
-
-      if(!fout_dirCreation.mkdirs()) {
-        throw new Exception("Failed to create asset directory.");
-      }
-
       FileOutputStream fout = new FileOutputStream(ctx.getCacheDir() + "/" + dir + "/" + ze.getName());
 
       byte data[] = new byte[1024];

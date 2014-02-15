@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Adefy Showcase</string>
+    <string name="title_section1">Tech Demos</string>
+    <string name="title_section2">Layouts</string>
+    <string name="title_section3">About</string>
+
+    <string name="about_teaser_1">We believe in enabling advertising that cultivates user experiences. Existing ad formats are obtuse, and fit in poorly with mobile use patterns. The web has and is evolving dramatically, and content delivery needs to reflect this.</string>
+    <string name="about_teaser_2">Our first step is load screen ads, with true in-feed offerings following.</string>
+
+</resources>

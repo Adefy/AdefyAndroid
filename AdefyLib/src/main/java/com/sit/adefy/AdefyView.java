@@ -57,6 +57,7 @@ public class AdefyView extends GLSurfaceView {
   private String pushTitle;
   private String pushDesc;
   private String pushURL;
+  private String adType = null;
 
   private StringBuilder adRuntime;
   private JSONArray textureArray = null;
@@ -81,6 +82,18 @@ public class AdefyView extends GLSurfaceView {
   public AdefyView(String apiKey, String adName, String serverInterface, Context context) {
     super(context);
 
+    if(apiKey != null) { this.apiKey = apiKey; }
+    if(adName != null) { this.adName = adName; }
+    if(serverInterface != null) { this.serverInterface = serverInterface; }
+
+    init(context, null);
+  }
+
+  // Constructor that allows us to specify a custom ad type
+  public AdefyView(String apiKey, String adName, String serverInterface, Context context, String adType) {
+    super(context);
+
+    if(adType != null) { this.adType = adType; }
     if(apiKey != null) { this.apiKey = apiKey; }
     if(adName != null) { this.adName = adName; }
     if(serverInterface != null) { this.serverInterface = serverInterface; }
@@ -148,7 +161,7 @@ public class AdefyView extends GLSurfaceView {
 
         @Override
         protected Void doInBackground(Void... voids) {
-          AdefyDownloader downloader = new AdefyDownloader(getContext(), apiKey, serverInterface);
+          AdefyDownloader downloader = new AdefyDownloader(getContext(), apiKey, serverInterface, adType);
 
           if(!downloader.fetchAd(adName)) {
             Log.e("AdefyView", "Ad fetch failed!");

@@ -12,6 +12,8 @@ import com.sit.adefy.objects.Color3;
 
 import org.jbox2d.common.Vec2;
 
+import java.security.spec.ECField;
+import java.util.Timer;
 import java.util.TimerTask;
 
 /*
@@ -261,34 +263,42 @@ public class BezAnimation {
     final float[] t = new float[1];
     t[0] = -tIncr;
 
-    AdefyRenderer.animationTimer.scheduleAtFixedRate(new TimerTask() {
+    try {
+      AdefyRenderer.animationTimer.scheduleAtFixedRate(new TimerTask() {
 
-      private boolean firstRun = true;
+        private boolean firstRun = true;
 
-      @Override
-      public void run() {
-        t[0] += tIncr;
+        @Override
+        public void run() {
+          t[0] += tIncr;
 
-        if(firstRun) {
-          getStartValue();
-          firstRun = false;
+          if(firstRun) {
+            getStartValue();
+            firstRun = false;
+          }
+
+          if(t[0] > 1) {
+            float val = update(1);
+            cancel();
+
+            // if(cbEnd.length() > 0) {
+              // AdefyScene.getWebView().loadUrl("javascript:" + cbEnd + "();");
+            // }
+          } else {
+            float val = update(t[0]);
+
+            // if(cbStep.length() > 0) {
+              // AdefyScene.getWebView().loadUrl("javascript:" + cbStep + "(" + val + ");");
+            // }
+          }
         }
+      }, start, 1000 / fps);
+    } catch (Exception e) {
 
-        if(t[0] > 1) {
-          float val = update(1);
-          cancel();
-
-          // if(cbEnd.length() > 0) {
-            // AdefyScene.getWebView().loadUrl("javascript:" + cbEnd + "();");
-          // }
-        } else {
-          float val = update(t[0]);
-
-          // if(cbStep.length() > 0) {
-            // AdefyScene.getWebView().loadUrl("javascript:" + cbStep + "(" + val + ");");
-          // }
-        }
-      }
-    }, start, 1000 / fps);
+      // Assume timer was cancelled, so make a new one and re-run the animate call
+      AdefyRenderer.animationTimer = new Timer();
+      animated = false;
+      animate(start);
+    }
   }
 }

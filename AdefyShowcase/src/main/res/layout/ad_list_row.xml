@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    android:orientation="horizontal"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content" xmlns:android="http://schemas.android.com/apk/res/android"
+    android:padding="8dp">
+    <ImageView
+        android:layout_width="128dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/icon" android:src="@drawable/ic_launcher" android:paddingRight="8dp"
+        android:adjustViewBounds="true"/>
+    <RelativeLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Angry Birds meet Skittles"
+            android:id="@+id/title"
+            android:layout_alignParentTop="true" android:layout_alignParentLeft="true"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Physics, skittles, and suave marketing"
+            android:id="@+id/teaser"
+            android:layout_below="@+id/title" android:layout_alignParentLeft="true"/>
+    </RelativeLayout>
+</LinearLayout>

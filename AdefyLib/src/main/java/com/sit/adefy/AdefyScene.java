@@ -6,12 +6,16 @@ package com.sit.adefy;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 
 public class AdefyScene extends Activity {
 
   // Used to enable finishing from interface
   private static AdefyScene me = null;
+
+  // Use to fetch custom ad type
+  private static String adType = null;
 
   private AdefyView mView;
 
@@ -26,11 +30,16 @@ public class AdefyScene extends Activity {
     String apiKey = launchedIntent.getStringExtra("apiKey");
     String serverInterface = "https://app.adefy.com/api/v1/serve";
 
+    setRequestedOrientation(launchedIntent.getIntExtra("orientation", ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
+
     if(launchedIntent.getStringExtra("server") != null) {
       serverInterface = launchedIntent.getStringExtra("server");
     }
 
-    mView = new AdefyView(apiKey, adName, serverInterface, this);
+    // Null if not defined
+    adType = launchedIntent.getStringExtra("type");
+
+    mView = new AdefyView(apiKey, adName, serverInterface, this, adType);
     mView.setSceneActivity(this);
     setContentView(mView);
   }
