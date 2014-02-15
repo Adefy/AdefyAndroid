@@ -321,18 +321,21 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
       texture = _newTexture(name);
       _applyTextureOptions();
 
+      GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+      GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+
       // Image, load up
       if(compression.equals("none")) {
 
         // Create bitmap
-        Bitmap bitmap = BitmapFactory.decodeFile(path);
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inScaled = false;
+
+        Bitmap bitmap = BitmapFactory.decodeFile(path, options);
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, bitmap, 0);
         bitmap.recycle();
 
       } else if(compression.equals("etc1")) {
-
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
 
         // Create ETC1
         FileInputStream stream = new FileInputStream(new File(path));

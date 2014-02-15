@@ -2,56 +2,91 @@ package com.sit.adefy.showcase;
 
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
-import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.Toast;
 
+import com.sit.adefy.AdefyDownloader;
 import com.sit.adefy.AdefyScene;
 
 public class TechDemoListFragment extends ListFragment {
 
-  private AdListItem[] techDemos;
+  private static AdListItem[] techDemos = new AdListItem[] {
+      new AdListItem(
+          "Angry Birds meet Skittles", "Physics, skittles, and some good 'ol suave marketing. (Also acts as a physics stress test)",
+          R.drawable.skittles,
+          "skittle_template",
+          ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+      ),
+      new AdListItem(
+          "Concrete-proof car",
+          "A car maker shows off the durability and safety of a new model.",
+          R.drawable.car,
+          "car_template",
+          ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+      ),
+      new AdListItem(
+          "Watch de-construction",
+          "A quality watch is great inside and out. Have a look at the internals of an elegant & precise accessory.",
+          R.drawable.watch,
+          "watch_template",
+          ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+      )
+  };
+
+  private boolean loadRequestMade = false;
+
+  private void loadTechdemo(final AdListItem demo) {
+    new AsyncTask<Void, Void, Void>() {
+
+      @Override
+      protected Void doInBackground(Void... voids) {
+
+        AdefyDownloader adDownloader = new AdefyDownloader(getActivity(), null, demo.getType());
+
+        if(demo.getOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+          adDownloader.setLandscape(true);
+        }
+
+        adDownloader.fetchAd(demo.getType());
+        demo.setLoaded();
+
+        return null;
+      }
+    }.execute();
+  }
 
   @Override
   public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
 
-    techDemos = new AdListItem[] {
-        new AdListItem(
-            "Angry Birds meet Skittles", "Physics, skittles, and some good 'ol suave marketing.",
-            R.drawable.skittles,
-            "skittle_template",
-            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        ),
-        new AdListItem(
-            "Concrete-proof car",
-            "A car maker shows off the durability and safety of a new model.",
-            R.drawable.car,
-            "car_template",
-            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-        ),
-        new AdListItem(
-            "Watch de-construction",
-            "A quality watch is great inside and out. Have a look at the internals of an elegant & precise accessory.",
-            R.drawable.watch,
-            "watch_template",
-            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        )
-    };
+    // Load all demos
+    if(!loadRequestMade) {
+      loadRequestMade = true;
 
-    AdListAdapter adapter = new AdListAdapter(getActivity(), techDemos);
+      for(int i = 0; i < TechDemoListFragment.techDemos.length; i++) {
+        loadTechdemo(TechDemoListFragment.techDemos[i]);
+      }
+    }
+
+    AdListAdapter adapter = new AdListAdapter(getActivity(), TechDemoListFragment.techDemos);
     setListAdapter(adapter);
   }
 
   @Override
   public void onListItemClick(ListView l, View v, int position, long id) {
-    AdListItem demo = techDemos[position];
+    AdListItem demo = TechDemoListFragment.techDemos[position];
 
-    Intent adIntent = new Intent(getActivity(), AdefyScene.class);
-    adIntent.putExtra("type", demo.getType());
-    adIntent.putExtra("orientation", demo.getOrientation());
-    startActivity(adIntent);
+    if(!demo.isLoaded()) {
+      Toast.makeText(getActivity(), "Demo hasn't loaded yet, try again in a few seconds...", Toast.LENGTH_SHORT).show();
+    } else {
+      Intent adIntent = new Intent(getActivity(), AdefyScene.class);
+      adIntent.putExtra("adName", demo.getType());
+      adIntent.putExtra("orientation", demo.getOrientation());
+      startActivity(adIntent);
+    }
   }
 }

@@ -88,8 +88,8 @@ public class SingleColorMaterial extends Material {
       GLES20.glUniformMatrix4fv(modelHandle, 1, false, modelView, 0);
       GLES20.glUniform4fv(colorHandle, 1, color.toFloatArray(), 0);
 
-      GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, vertBuffer);
       GLES20.glEnableVertexAttribArray(positionHandle);
+      GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, vertBuffer);
 
       if(!SingleColorMaterial.justUsed) {
         if(TexturedMaterial.justUsed) { TexturedMaterial.postFinalDraw(); }

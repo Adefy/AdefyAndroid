@@ -4,3 +4,4 @@ AdefyService/build
 .gradle
 .DS_Store
 build
+sit-key.keystore

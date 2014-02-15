@@ -102,8 +102,6 @@ public class JSActorInterface {
     float[] _verts = parseVertJSON(verts);
     int id = getNextID();
 
-    Log.d("Adefy", "GOT CIRCLE ACTOR CREATION REQUEST: " + radius);
-
     new CircleActor(renderer, id, _verts, radius);
 
     return id;

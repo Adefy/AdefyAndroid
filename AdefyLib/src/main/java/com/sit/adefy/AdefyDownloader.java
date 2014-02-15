@@ -47,6 +47,7 @@ public class AdefyDownloader {
   private String APIKey;
   private String downloadPath;
   private String adType = null;
+  private boolean landscape = false;
 
   // Gathers initial device information, packages it in a string ready to send to the server.
   public AdefyDownloader(Context _ctx, String _apikey) {
@@ -69,11 +70,15 @@ public class AdefyDownloader {
     gatherUserInformation();
   }
 
-  // Contacts the server, sends userinfo, and expects to receive an ad. Unzips if a
-  // folder is provided. Otherwise, unzip
-  //
-  // Returns success
   public boolean fetchAd(String folder) {
+    return fetchAd(folder, -1);
+  }
+
+  public void setLandscape(boolean landscape) {
+    this.landscape = landscape;
+  }
+
+  public boolean fetchAd(String folder, int duration) {
     if(!isNetworkAvailable()) {
 
       Log.e("Adefy", "Can't fetch ad, network not avaliable!");
@@ -93,6 +98,10 @@ public class AdefyDownloader {
       e.printStackTrace();
       return false;
     }
+  }
+
+  public boolean adExists(String folder) {
+    return new File(folder).exists();
   }
 
   private void genDownloadPath() {
@@ -125,8 +134,14 @@ public class AdefyDownloader {
     }
 
     userInfo += "?uuid=" + ((TelephonyManager)ctx.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
-    userInfo += "&width=" + size.x;
-    userInfo += "&height=" + size.y;
+
+    if(landscape) {
+      userInfo += "&width=" + size.y;
+      userInfo += "&height=" + size.x;
+    } else {
+      userInfo += "&width=" + size.x;
+      userInfo += "&height=" + size.y;
+    }
 
     if(adType != null) {
       userInfo += "&type=" + adType;

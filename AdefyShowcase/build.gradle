@@ -28,5 +28,5 @@ repositories {
 dependencies {
     compile 'com.android.support:appcompat-v7:+'
     compile fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
-    compile 'com.sit.adefy:AdefyLib:1.0.1@aar'
+    compile 'com.sit.adefy:AdefyLib-debug:1.0.1@aar'
 }
