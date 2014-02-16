@@ -52,8 +52,8 @@ public class AdefyView extends GLSurfaceView {
   private String adefySourcePath;
 
   private String adIcon = null;
-  private String impressionURL;
-  private String clickURL;
+  private String impressionURL = null;
+  private String clickURL = null;
   private String pushTitle;
   private String pushDesc;
   private String pushURL;
@@ -204,19 +204,25 @@ public class AdefyView extends GLSurfaceView {
   // Called once an ad is locally available
   private void finalInit() {
 
-    parseDelivered();
+    boolean result = parseDelivered();
 
-    adRuntime = new StringBuilder();
-    adRuntime.append("javascript:(function(){");
-    getJS(adRuntime, adefySourcePath);  // AdefyJS
-    getJS(adRuntime, adSourcePath);     // Ad code
-    adRuntime.append("})()");
+    if(result) {
 
-    setupWebView();
+      adRuntime = new StringBuilder();
+      adRuntime.append("javascript:(function(){");
+      getJS(adRuntime, adefySourcePath);  // AdefyJS
+      getJS(adRuntime, adSourcePath);     // Ad code
+      adRuntime.append("})()");
+
+      setupWebView();
+    } else {
+      Toast.makeText(getContext(), "Ad failed to load :( You should let us know this happened!", Toast.LENGTH_LONG).show();
+      AdefyScene.getMe().finish();
+    }
   }
 
-  // Parces and inspects the package.json, grabs necessary paths
-  private void parseDelivered() {
+  // Parses and inspects the package.json, grabs necessary paths
+  private boolean parseDelivered() {
 
     try {
       File manifest = new File(getContext().getCacheDir() + "/" + adName + "/package.json");
@@ -242,16 +248,19 @@ public class AdefyView extends GLSurfaceView {
       pushURL = manifestObj.getString("pushURL");
 
       adIcon = manifestObj.getString("pushIcon");
-
-      Log.d("Adefy", "Got icon: " + adIcon);
-
       textureArray = manifestObj.getJSONArray("textures");
+
+      if(impressionURL == null) {
+        return false;
+      }
 
       // Send texture information to renderer
       renderer.setTextureInfo(textureArray, getContext().getCacheDir() + "/" + adName);
+      return true;
 
     } catch (Exception e) {
       e.printStackTrace();
+      return false;
     }
   }
 
@@ -351,6 +360,7 @@ public class AdefyView extends GLSurfaceView {
 
   // Call the impression URL we were provided
   private void registerImpression() {
+    if(impressionURL == null) { return; }
     if(impressionURL.length() == 0) { return; }
 
     new AsyncTask<Void, Void, Void>() {
@@ -382,6 +392,7 @@ public class AdefyView extends GLSurfaceView {
   // Call the click URL we were provided
   private void registerClick() {
     if(clicked) { return; }
+    if(clickURL == null) { return; }
     if(clickURL.length() == 0) { return; }
 
     new AsyncTask<Void, Void, Void>() {
