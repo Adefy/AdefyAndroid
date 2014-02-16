@@ -35,10 +35,6 @@ public class LayoutListFragment extends ListFragment {
 
         AdefyDownloader adDownloader = new AdefyDownloader(getActivity(), null, demo.getType());
 
-        if(demo.getOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-          adDownloader.setLandscape(true);
-        }
-
         adDownloader.fetchAd(demo.getType());
         demo.setLoaded();
 
