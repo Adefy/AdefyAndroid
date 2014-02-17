@@ -1,0 +1,11 @@
+<project name="gdx-natives" basedir="." default="all">
+	<target name="clean">
+		<ant antfile="build-android32.xml" target="clean"/>
+	</target>
+	
+	<target name="compile-natives">
+		<ant antfile="build-android32.xml"/>
+	</target>
+
+	<target name="all" depends="compile-natives,pack-natives"/>
+</project>

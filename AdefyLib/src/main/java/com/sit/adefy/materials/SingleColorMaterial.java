@@ -29,6 +29,8 @@ public class SingleColorMaterial extends Material {
   private static int modelHandle;
   private static int projectionHandle;
 
+  private static float[] glColor = new float[3];
+
   private static int shader;
 
   protected static String vertCode =
@@ -83,10 +85,13 @@ public class SingleColorMaterial extends Material {
 
     try {
 
+      // Pull in color, store in static float[] array to prevent allocation
+      color.toFloatArray(glColor);
+
       // Set up handles
       GLES20.glUniformMatrix4fv(projectionHandle, 1, false, AdefyRenderer.getProjection(), 0);
       GLES20.glUniformMatrix4fv(modelHandle, 1, false, modelView, 0);
-      GLES20.glUniform4fv(colorHandle, 1, color.toFloatArray(), 0);
+      GLES20.glUniform4fv(colorHandle, 1, glColor, 0);
 
       GLES20.glEnableVertexAttribArray(positionHandle);
       GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, vertBuffer);

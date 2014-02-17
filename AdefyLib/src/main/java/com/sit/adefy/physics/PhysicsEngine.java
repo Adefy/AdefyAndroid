@@ -4,12 +4,11 @@ package com.sit.adefy.physics;
 // Copyright Â© 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
 //
 
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.World;
 import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.actors.Actor;
-
-import org.jbox2d.common.Vec2;
-import org.jbox2d.dynamics.Body;
-import org.jbox2d.dynamics.World;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,7 +31,7 @@ public class PhysicsEngine {
   private int bodyCount = 0;
   private boolean destroyAll = false;
 
-  private static int[] physicsLayers = new int[] {
+  private static short[] physicsLayers = new short[] {
       0x0001, // 1
       0x0002, // 2
       0x0004, // 3
@@ -48,10 +47,12 @@ public class PhysicsEngine {
       0x1000, // 13
       0x2000, // 14
       0x4000, // 15
-      0x8000  // 16
+
+      // TODO: This is probably bad...
+      (short) 0x8000  // 16
   };
 
-  public static int getCategoryBits(int layer) {
+  public static short getCategoryBits(int layer) {
     if(layer > physicsLayers.length - 1) {
       return 0;
     } else {
@@ -59,17 +60,19 @@ public class PhysicsEngine {
     }
   }
 
-  public static int getMaskBits(int layer) {
+  public static short getMaskBits(int layer) {
 
     // Layer 0 collides with everything
     if(layer == 0) {
-      return 0xffff;
+      return 0xfff;
     }
 
     if(layer > physicsLayers.length - 1) {
       return 0;
     } else {
-      return 0xffff & ~physicsLayers[layer];
+
+      // TODO: This is probably bad...
+      return (short) (0xfff & ~physicsLayers[layer]);
     }
   }
 
@@ -126,8 +129,7 @@ public class PhysicsEngine {
       running = true;
 
       // Create world with saved gravity
-      physicsWorld = new World(new Vec2(0, -10));
-      physicsWorld.setAllowSleep(true);
+      physicsWorld = new World(new Vector2(0, -10), true);
 
       // Step!
       while(!stop) {

@@ -13,6 +13,8 @@ import android.opengl.GLUtils;
 import android.opengl.Matrix;
 import android.util.Log;
 
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.sit.adefy.actors.TextActor;
 import com.sit.adefy.materials.SingleColorMaterial;
 import com.sit.adefy.materials.TexturedMaterial;
@@ -21,8 +23,6 @@ import com.sit.adefy.objects.Texture;
 import com.sit.adefy.objects.TextureSetQueueItem;
 import com.sit.adefy.physics.PhysicsEngine;
 
-import org.jbox2d.common.Vec2;
-import org.jbox2d.common.Vec3;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -39,10 +39,18 @@ import java.util.Timer;
 public class AdefyRenderer implements GLSurfaceView.Renderer {
 
   private static float PPM = 128.0f;
-  public static Vec2 screenToWorld(Vec2 cords) { return new Vec2(cords.x / PPM, cords.y / PPM); }
-  public static Vec2 worldToScreen(Vec2 cords) { return new Vec2(cords.x * PPM, cords.y * PPM); }
   public static float getPPM() { return PPM; }
   public static float getMPP() { return 1.0f / PPM; }
+
+  public static void screenToWorld(Vector2 cords, Vector2 store) {
+    store.x = cords.x / PPM;
+    store.y = cords.y / PPM;
+  }
+
+  public static void worldToScreen(Vector2 cords, Vector2 store) {
+    store.x = cords.x * PPM;
+    store.y = cords.y * PPM;
+  }
 
   public final ArrayList<Actor> actors = new ArrayList<Actor>();
   private ArrayList<Texture> textures = new ArrayList<Texture>();
@@ -54,7 +62,7 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
 
   private static float[] projection = new float[16];
   public static Timer animationTimer = new Timer();
-  public static Vec3 clearCol = null;
+  public static Vector3 clearCol = null;
   private String material = "";
 
   private JSONArray textureJSON = null;
@@ -86,7 +94,7 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
     // Use our clear color
     animationTimer.cancel();
     animationTimer = new Timer();
-    clearCol = new Vec3(0.0f, 0.0f, 0.0f);
+    clearCol = new Vector3(0.0f, 0.0f, 0.0f);
     GLES20.glClearColor(clearCol.x, clearCol.y, clearCol.z, 1.0f);
 
     // Build shaders
@@ -201,7 +209,7 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
 
                 // Store for now to update state
                 Actor temp = a.getAttachment();
-                temp.setPosition(a.getPosition());
+                temp.setPosition(a);
                 temp.setRotation(a.getRotation());
 
                 // Switch render subject
@@ -321,9 +329,6 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
       texture = _newTexture(name);
       _applyTextureOptions();
 
-      GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-      GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
-
       // Image, load up
       if(compression.equals("none")) {
 
@@ -363,6 +368,9 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
   private void _applyTextureOptions() {
     GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
     GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+
+    GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+    GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
   }
 
   private Texture _newTexture(String name) {

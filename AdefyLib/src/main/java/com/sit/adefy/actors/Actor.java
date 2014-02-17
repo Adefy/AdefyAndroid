@@ -8,6 +8,12 @@ import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.util.Log;
 
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.MassData;
+import com.badlogic.gdx.physics.box2d.Shape;
 import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.js.JSActorInterface;
 import com.sit.adefy.materials.Material;
@@ -16,14 +22,6 @@ import com.sit.adefy.materials.TexturedMaterial;
 import com.sit.adefy.objects.Color3;
 import com.sit.adefy.physics.BodyQueueDef;
 import com.sit.adefy.physics.PhysicsEngine;
-
-import org.jbox2d.collision.shapes.MassData;
-import org.jbox2d.collision.shapes.Shape;
-import org.jbox2d.common.Vec2;
-import org.jbox2d.dynamics.Body;
-import org.jbox2d.dynamics.BodyDef;
-import org.jbox2d.dynamics.BodyType;
-import org.jbox2d.dynamics.FixtureDef;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -51,8 +49,8 @@ public abstract class Actor {
   protected float psyxVertices[] = null;
   private float[] modelView = new float[16];
 
-  private Vec2 position = new Vec2(0.0f, 0.0f);
-  private Vec2 renderOffset = new Vec2(0.0f, 0.0f);
+  private Vector2 position = new Vector2(0.0f, 0.0f);
+  private Vector2 renderOffset = new Vector2(0.0f, 0.0f);
   private float rotation = 0.0f;
 
   private Material material;
@@ -79,10 +77,13 @@ public abstract class Actor {
   public AdefyRenderer getRenderer() { return renderer; }
   public int getId() { return id; }
 
-  public Vec2 getPosition() {
-    if(body == null) { return position; }
-
-    return AdefyRenderer.worldToScreen(body.getPosition());
+  public void getPosition(Vector2 store) {
+    if(body == null) {
+      store.x = position.x;
+      store.y = position.y;
+    } else {
+      AdefyRenderer.worldToScreen(body.getPosition(), store);
+    }
   }
 
   public float getRotation() {
@@ -136,11 +137,23 @@ public abstract class Actor {
   }
 
   // Modify the actor or the body
-  public void setPosition(Vec2 position) {
+  public void setPosition(Vector2 position) {
     if(body == null) {
       this.position = position;
     } else {
-      body.setTransform(AdefyRenderer.screenToWorld(position), body.getAngle());
+      Vector2 targetPosition = new Vector2();
+      AdefyRenderer.screenToWorld(position, targetPosition);
+      body.setTransform(targetPosition, body.getAngle());
+    }
+  }
+
+  public void setPosition(Actor actor) {
+    actor.getPosition(position);
+
+    if(body != null) {
+      Vector2 targetPosition = new Vector2();
+      AdefyRenderer.screenToWorld(position, targetPosition);
+      body.setTransform(targetPosition, body.getAngle());
     }
   }
 
@@ -155,8 +168,8 @@ public abstract class Actor {
     }
   }
 
-  public void setRenderOffset(float x, float y) { setRenderOffset(new Vec2(x, y)); }
-  public void setRenderOffset(Vec2 offset) {
+  public void setRenderOffset(float x, float y) { setRenderOffset(new Vector2(x, y)); }
+  public void setRenderOffset(Vector2 offset) {
     renderOffset = offset;
   }
 
@@ -354,12 +367,15 @@ public abstract class Actor {
     BodyDef bd = new BodyDef();
 
     if(density > 0) {
-      bd.type = BodyType.DYNAMIC;
+      bd.type = BodyDef.BodyType.DynamicBody;
     } else {
-      bd.type = BodyType.STATIC;
+      bd.type = BodyDef.BodyType.StaticBody;
     }
 
-    bd.position = AdefyRenderer.screenToWorld(position);
+    Vector2 targetPosition = new Vector2();
+    AdefyRenderer.screenToWorld(position, targetPosition);
+
+    bd.position.set(targetPosition);
     bd.angle = rotation * 0.0174532925f;
 
     renderer.getPsyx().requestBodyCreation(new BodyQueueDef(id, bd));
@@ -383,9 +399,7 @@ public abstract class Actor {
     if(density > 0) {
 
       // Mass
-      MassData massdata = new MassData();
-      body.getMassData(massdata);
-
+      MassData massdata = body.getMassData();
       float scaleFactor = density / massdata.mass;
       massdata.mass *= scaleFactor;
       massdata.I *= scaleFactor;
@@ -420,18 +434,9 @@ public abstract class Actor {
 
   private void updateWorldState() {
     if(body != null) {
-      position = AdefyRenderer.worldToScreen(body.getPosition());
+      AdefyRenderer.worldToScreen(body.getPosition(), position);
       rotation = (float)Math.toDegrees(body.getAngle());
     }
-  }
-
-  private Vec2 getVisiblePosition() {
-    Vec2 visiblePosition = new Vec2();
-
-    visiblePosition.x = position.x + renderOffset.x;
-    visiblePosition.y = position.y + renderOffset.y;
-
-    return visiblePosition;
   }
 
   private int getGLRenderMode() {
@@ -443,10 +448,8 @@ public abstract class Actor {
   }
 
   private void setupRenderMatrix() {
-    Vec2 visiblePosition = getVisiblePosition();
-
     Matrix.setIdentityM(modelView, 0);
-    Matrix.translateM(modelView, 0, visiblePosition.x - AdefyRenderer.camX, visiblePosition.y - AdefyRenderer.camY, 1.0f);
+    Matrix.translateM(modelView, 0, position.x + renderOffset.x - AdefyRenderer.camX, position.y + renderOffset.y - AdefyRenderer.camY, 1.0f);
     Matrix.rotateM(modelView, 0, rotation, 0, 0, 1.0f);
   }
 

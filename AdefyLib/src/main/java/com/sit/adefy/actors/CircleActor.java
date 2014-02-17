@@ -1,9 +1,8 @@
 package com.sit.adefy.actors;
 
+import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.Shape;
 import com.sit.adefy.AdefyRenderer;
-
-import org.jbox2d.collision.shapes.CircleShape;
-import org.jbox2d.collision.shapes.Shape;
 
 public class CircleActor extends Actor {
 

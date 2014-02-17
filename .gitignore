@@ -4,4 +4,5 @@ AdefyService/build
 .gradle
 .DS_Store
 build
+obj
 sit-key.keystore

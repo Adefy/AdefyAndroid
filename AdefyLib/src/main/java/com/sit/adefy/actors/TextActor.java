@@ -9,9 +9,6 @@ import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.objects.Color3;
 import com.sit.adefy.objects.Texture;
 
-import org.jbox2d.collision.shapes.Shape;
-import org.jbox2d.common.Vec2;
-
 import java.util.ArrayList;
 
 public class TextActor extends RectangleActor {

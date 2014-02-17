@@ -6,13 +6,11 @@ package com.sit.adefy.animations;
 
 import android.util.Log;
 
+import com.badlogic.gdx.math.Vector2;
 import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.actors.Actor;
 import com.sit.adefy.objects.Color3;
 
-import org.jbox2d.common.Vec2;
-
-import java.security.spec.ECField;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -24,11 +22,13 @@ public class BezAnimation {
   private final Actor actor;
   private String property[];
 
-  private Vec2 controlPoints[];
+  private Vector2 controlPoints[];
   private float endVal;
   private float startVal;
   private float duration;
   private int fps;
+
+  private Vector2 tempVec = new Vector2();
 
   // JS callback method names, directly executable from our end on the webview.
   private String cbStart;
@@ -44,7 +44,7 @@ public class BezAnimation {
   public BezAnimation(
       Actor actor,
       float endVal,
-      Vec2 controlPoints[],
+      Vector2 controlPoints[],
       float duration,
       String property[],
       int fps
@@ -55,7 +55,7 @@ public class BezAnimation {
   public BezAnimation(
       Actor actor,
       float endVal,
-      Vec2 controlPoints[],
+      Vector2 controlPoints[],
       float duration,
       String property[],
       int fps,
@@ -131,8 +131,10 @@ public class BezAnimation {
     if(property[0].equals("rotation")) {
       startVal = actor.getRotation();
     } else if(property[0].equals("position")) {
-      if(property[1].equals("x")) { startVal = actor.getPosition().x; }
-      else if(property[1].equals("y")) { startVal = actor.getPosition().y; }
+      actor.getPosition(tempVec);
+
+      if(property[1].equals("x")) { startVal = tempVec.x; }
+      else if(property[1].equals("y")) { startVal = tempVec.y; }
     } else if(property[0].equals("color")) {
       if(property[1].equals("r")) { startVal = actor.getColor().r; }
       else if(property[1].equals("g")) { startVal = actor.getColor().g; }
@@ -227,12 +229,12 @@ public class BezAnimation {
       if(property[0].equals("rotation")) {
         actor.setRotation(val);
       } else if(property[0].equals("position")) {
-        Vec2 pos = actor.getPosition();
+        actor.getPosition(tempVec);
 
-        if(property[1].equals("x")) { pos.x = val; }
-        else if(property[1].equals("y")) { pos.y = val; }
+        if(property[1].equals("x")) { tempVec.x = val; }
+        else if(property[1].equals("y")) { tempVec.y = val; }
 
-        actor.setPosition(pos);
+        actor.setPosition(tempVec);
       } else if(property[0].equals("color")) {
 
         Color3 col = actor.getColor();

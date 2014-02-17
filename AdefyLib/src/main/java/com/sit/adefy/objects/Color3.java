@@ -4,7 +4,7 @@ package com.sit.adefy.objects;
 // Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
 //
 
-import org.jbox2d.common.Vec3;
+import com.badlogic.gdx.math.Vector3;
 
 public class Color3 {
 
@@ -36,8 +36,14 @@ public class Color3 {
     this.bF = b;
   }
 
-  public Vec3 toFloat() {
-    return new Vec3((float)r / 255.0f, (float)g / 255.0f, (float)b / 255.0f);
+  public Vector3 toFloat() {
+    return new Vector3((float)r / 255.0f, (float)g / 255.0f, (float)b / 255.0f);
+  }
+
+  public void toFloatArray(float[] array) {
+    array[0] = (float)r / 255.0f;
+    array[1] = (float)g / 255.0f;
+    array[2] = (float)b / 255.0f;
   }
 
   public float[] toFloatArray() {

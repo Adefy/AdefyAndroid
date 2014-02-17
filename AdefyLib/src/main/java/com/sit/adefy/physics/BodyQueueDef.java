@@ -4,7 +4,8 @@ package com.sit.adefy.physics;
 // Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
 //
 
-import org.jbox2d.dynamics.BodyDef;
+
+import com.badlogic.gdx.physics.box2d.BodyDef;
 
 // Used for body creation
 public class BodyQueueDef {

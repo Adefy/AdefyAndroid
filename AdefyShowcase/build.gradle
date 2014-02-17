@@ -6,10 +6,19 @@ android {
 
     defaultConfig {
         minSdkVersion 13
-        targetSdkVersion 16
-        versionCode 5
-        versionName "1.0.4"
+        targetSdkVersion 18
+        versionCode 7
+        versionName "1.0.6"
     }
+
+    productFlavors {
+        arm {
+            ndk {
+                abiFilters "armeabi-v7a", "armeabi"
+            }
+        }
+    }
+
     buildTypes {
         release {
             runProguard false
@@ -25,7 +34,11 @@ repositories {
     }
 }
 
+configurations { natives }
+
 dependencies {
     compile 'com.android.support:appcompat-v7:+'
-    compile 'com.sit.adefy:AdefyLib:1.0.1@aar'
+    natives "com.badlogicgames.gdx:gdx-platform:0.9.9:natives-armeabi"
+    natives "com.badlogicgames.gdx:gdx-platform:0.9.9:natives-armeabi-v7a"
+    compile 'com.sit.adefy:AdefyLib:1.0.2@aar'
 }

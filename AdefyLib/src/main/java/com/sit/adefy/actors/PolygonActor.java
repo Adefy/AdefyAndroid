@@ -1,9 +1,8 @@
 package com.sit.adefy.actors;
 
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.sit.adefy.AdefyRenderer;
-
-import org.jbox2d.collision.shapes.PolygonShape;
-import org.jbox2d.common.Vec2;
 
 public class PolygonActor extends Actor {
 
@@ -25,26 +24,26 @@ public class PolygonActor extends Actor {
     PolygonShape shape = new PolygonShape();
 
     if(psyxVertices != null) {
-      Vec2[] verts = new Vec2[psyxVertices.length / 2];
+      Vector2[] verts = new Vector2[psyxVertices.length / 2];
 
       int vertIndex = 0;
       for(int i = 0; i < psyxVertices.length; i += 2) {
-        verts[vertIndex] = new Vec2(psyxVertices[i] / AdefyRenderer.getPPM(), psyxVertices[i + 1] / AdefyRenderer.getPPM());
+        verts[vertIndex] = new Vector2(psyxVertices[i] / AdefyRenderer.getPPM(), psyxVertices[i + 1] / AdefyRenderer.getPPM());
         vertIndex++;
       }
 
-      shape.set(verts, verts.length);
+      shape.set(verts);
 
     } else {
-      Vec2[] verts = new Vec2[vertices.length / 3];
+      Vector2[] verts = new Vector2[vertices.length / 3];
 
       int vertIndex = 0;
       for(int i = 0; i < vertices.length; i += 3) {
-        verts[vertIndex] = new Vec2(vertices[i] / AdefyRenderer.getPPM(), vertices[i + 1] / AdefyRenderer.getPPM());
+        verts[vertIndex] = new Vector2(vertices[i] / AdefyRenderer.getPPM(), vertices[i + 1] / AdefyRenderer.getPPM());
         vertIndex++;
       }
 
-      shape.set(verts, verts.length);
+      shape.set(verts);
     }
 
     return shape;

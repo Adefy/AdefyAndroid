@@ -19,6 +19,10 @@ public class AdefyScene extends Activity {
 
   private AdefyView mView;
 
+  static {
+    System.loadLibrary("gdx");
+  }
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);

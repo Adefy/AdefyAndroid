@@ -7,11 +7,10 @@ package com.sit.adefy.js;
 import android.content.pm.ActivityInfo;
 import android.webkit.JavascriptInterface;
 
+import com.badlogic.gdx.math.Vector3;
 import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.AdefyScene;
 import com.sit.adefy.AdefyView;
-
-import org.jbox2d.common.Vec3;
 
 public class JSEngineInterface {
 
@@ -35,7 +34,7 @@ public class JSEngineInterface {
 
   @JavascriptInterface
   public String getClearColor() {
-    Vec3 col = AdefyRenderer.clearCol;
+    Vector3 col = AdefyRenderer.clearCol;
     return "{ r: " + col.x + ", g: " + col.y + ", b: " + col.z + " }";
   }
 

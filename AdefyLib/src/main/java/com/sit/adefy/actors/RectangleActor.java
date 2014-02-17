@@ -6,10 +6,8 @@ package com.sit.adefy.actors;
 
 import android.util.Log;
 
+import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.sit.adefy.AdefyRenderer;
-
-import org.jbox2d.collision.shapes.PolygonShape;
-import org.jbox2d.common.Vec2;
 
 public class RectangleActor extends Actor {
 

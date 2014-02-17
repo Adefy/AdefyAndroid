@@ -6,12 +6,12 @@ package com.sit.adefy.js;
 
 import android.webkit.JavascriptInterface;
 
+import com.badlogic.gdx.math.Vector2;
 import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.animations.BezAnimation;
 import com.sit.adefy.animations.VertAnimation;
 import com.sit.adefy.actors.Actor;
 
-import org.jbox2d.common.Vec2;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -109,7 +109,7 @@ public class JSAnimationInterface {
       boolean preCalc
   ) throws JSONException {
 
-    Vec2 cPoints[] = null;
+    Vector2 cPoints[] = null;
 
     float endVal = options.getLong("endVal");
     float duration = options.getInt("duration");
@@ -121,10 +121,10 @@ public class JSAnimationInterface {
       JSONArray JSON_cpoints = options.getJSONArray("controlPoints");
 
       if(JSON_cpoints.length() > 0) {
-        cPoints = new Vec2[JSON_cpoints.length()];
+        cPoints = new Vector2[JSON_cpoints.length()];
 
         for(int p = 0; p < cPoints.length; p++) {
-          cPoints[p] = new Vec2();
+          cPoints[p] = new Vector2();
           cPoints[p].x = JSON_cpoints.getJSONObject(p).getLong("x");
           cPoints[p].y = JSON_cpoints.getJSONObject(p).getLong("y");
         }

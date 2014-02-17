@@ -27,6 +27,7 @@ package com.sit.adefy.js;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 
+import com.badlogic.gdx.math.Vector2;
 import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.actors.Actor;
 import com.sit.adefy.actors.CircleActor;
@@ -34,9 +35,6 @@ import com.sit.adefy.actors.PolygonActor;
 import com.sit.adefy.actors.RectangleActor;
 import com.sit.adefy.actors.TextActor;
 import com.sit.adefy.objects.Color3;
-
-import org.jbox2d.collision.shapes.CircleShape;
-import org.jbox2d.common.Vec2;
 
 // For full, proper documentation, check the AWGL implementation
 public class JSActorInterface {
@@ -277,7 +275,7 @@ public class JSActorInterface {
     Actor a = findActor(id);
     if (a == null) { return false; }
 
-    a.setPosition(new Vec2(x, y));
+    a.setPosition(new Vector2(x, y));
 
     return true;
   }
@@ -291,7 +289,8 @@ public class JSActorInterface {
     Actor a = findActor(id);
     if (a == null) { return ""; }
 
-    Vec2 v = a.getPosition();
+    Vector2 v = new Vector2();
+    a.getPosition(v);
     return "{ x: \"" + v.x + "\", y: \"" + v.y + "\" }";
   }
 
