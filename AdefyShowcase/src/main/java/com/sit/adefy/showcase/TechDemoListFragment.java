@@ -34,6 +34,13 @@ public class TechDemoListFragment extends ListFragment {
           R.drawable.watch,
           "watch_template",
           ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+      ),
+      new AdListItem(
+          "Inactive publisher ad",
+          "This ad gets delivered to inactive or disabled publishers, for testing purposes.",
+          R.drawable.test,
+          "test",
+          ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
       )
   };
 

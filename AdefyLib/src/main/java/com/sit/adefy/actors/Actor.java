@@ -265,11 +265,15 @@ public abstract class Actor {
 
     // Go through and find the texture handle
     int[] handle = renderer.getTextureHandle(name);
+    float uScale = renderer.getTexture(name).clipScaleU;
+    float vScale = renderer.getTexture(name).clipScaleV;
 
     if(!material.getName().equals(TexturedMaterial.name)) {
-      this.material = new TexturedMaterial(handle);
+      material = new TexturedMaterial(handle, uScale, vScale);
     } else {
       ((TexturedMaterial)this.material).setTextureHandle(handle);
+      ((TexturedMaterial)this.material).setUScale(uScale);
+      ((TexturedMaterial)this.material).setVScale(vScale);
     }
   }
 

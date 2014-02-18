@@ -5,6 +5,7 @@ package com.sit.adefy.materials;
 //
 
 import android.opengl.GLES20;
+import android.util.Log;
 
 import com.sit.adefy.AdefyRenderer;
 
@@ -25,21 +26,25 @@ public class TexturedMaterial extends Material {
   private static int modelHandle;
   private static int projectionHandle;
   private static int texSamplerHandle;
+  private static int uvScaleHandle;
 
   private static int shader;
 
   protected static String vertCode =
       "attribute vec3 Position;" +
           "attribute vec2 aTexCoord;" +
+          "attribute vec2 aUVScale;" +
 
           "uniform mat4 Projection;" +
           "uniform mat4 ModelView;" +
 
           "varying highp vec2 vTexCoord;" +
+          "varying highp vec2 vUVScale;" +
 
           "void main() {" +
           "  gl_Position = Projection * ModelView * vec4(Position.xyz, 1);" +
           "  vTexCoord = aTexCoord;" +
+          "  vUVScale = aUVScale;" +
           "}\n";
 
   protected static String fragCode =
@@ -47,21 +52,31 @@ public class TexturedMaterial extends Material {
 
       "varying highp vec2 vTexCoord;" +
       "uniform sampler2D uTexture;" +
+      "varying highp vec2 vUVScale;" +
 
       "void main() {" +
-      "  gl_FragColor = texture2D(uTexture, vTexCoord);" +
+      "  vec4 baseColor = texture2D(uTexture, vTexCoord * vUVScale);" +
+      "  if(baseColor.rgb == vec3(1.0, 0.0, 1.0))" +
+      "    discard;" +
+      "  gl_FragColor = baseColor;" +
       "}\n";
 
   private int[] textureHandle = null;
+  private float uScale = 1.0f;
+  private float vScale = 1.0f;
 
-  public TexturedMaterial(int[] textureHandle) {
+  public TexturedMaterial(int[] textureHandle, float uScale, float vScale) {
     super(name);
     this.textureHandle = textureHandle;
+    this.uScale = uScale;
+    this.vScale = vScale;
   }
 
   public void setTextureHandle(int[] textureHandle) {
     this.textureHandle = textureHandle;
   }
+  public void setUScale(float scale) { uScale = scale; }
+  public void setVScale(float scale) { vScale = scale; }
 
   public int getShader() {
     return shader;
@@ -72,6 +87,7 @@ public class TexturedMaterial extends Material {
     shader = AdefyRenderer.buildShader(vertCode, fragCode);
     positionHandle = GLES20.glGetAttribLocation(shader, "Position");
     texCoordHandle = GLES20.glGetAttribLocation(shader, "aTexCoord");
+    uvScaleHandle = GLES20.glGetAttribLocation(shader, "aUVScale");
     modelHandle = GLES20.glGetUniformLocation(shader, "ModelView");
     projectionHandle = GLES20.glGetUniformLocation(shader, "Projection");
     texSamplerHandle = GLES20.glGetUniformLocation(shader, "uTexture");
@@ -99,6 +115,7 @@ public class TexturedMaterial extends Material {
 
       GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle[0]);
       GLES20.glUniform1i(texSamplerHandle, 0);
+      GLES20.glVertexAttrib2f(uvScaleHandle, uScale, vScale);
 
       previousTexture = textureHandle[0];
     }

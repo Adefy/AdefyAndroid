@@ -44,6 +44,7 @@ public class Color3 {
     array[0] = (float)r / 255.0f;
     array[1] = (float)g / 255.0f;
     array[2] = (float)b / 255.0f;
+    array[3] = 1.0f;
   }
 
   public float[] toFloatArray() {

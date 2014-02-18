@@ -29,7 +29,7 @@ public class SingleColorMaterial extends Material {
   private static int modelHandle;
   private static int projectionHandle;
 
-  private static float[] glColor = new float[3];
+  private static float[] glColor = new float[4];
 
   private static int shader;
 

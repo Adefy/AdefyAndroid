@@ -15,4 +15,7 @@ public class Texture {
 
   public String getName() { return name; }
   public int[] getHandle() { return handle; }
+
+  public float clipScaleU = 1.0f;
+  public float clipScaleV = 1.0f;
 }

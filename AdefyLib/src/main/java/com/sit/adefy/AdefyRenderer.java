@@ -6,6 +6,8 @@ package com.sit.adefy;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.opengl.ETC1Util;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -268,11 +270,20 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
     return false;
   }
 
-  // Returns the handle for the specified texture
   public int[] getTextureHandle(String name) {
     for(int i = 0; i < textures.size(); i++) {
       if(textures.get(i).getName().equals(name)) {
         return textures.get(i).getHandle();
+      }
+    }
+
+    return null;
+  }
+
+  public Texture getTexture(String name) {
+    for(int i = 0; i < textures.size(); i++) {
+      if(textures.get(i).getName().equals(name)) {
+        return textures.get(i);
       }
     }
 
@@ -337,8 +348,39 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
         options.inScaled = false;
 
         Bitmap bitmap = BitmapFactory.decodeFile(path, options);
-        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, bitmap, 0);
-        bitmap.recycle();
+
+        // Check if texture is NPOT
+        if((bitmap.getWidth() & (bitmap.getWidth() - 1)) != 0 || (bitmap.getHeight() & (bitmap.getHeight() - 1)) != 0) {
+
+          float originalWidth = bitmap.getWidth();
+          float originalHeight = bitmap.getHeight();
+
+          float newWidth = nearestPowerOfTwo(bitmap.getWidth());
+          float newHeight = nearestPowerOfTwo(bitmap.getHeight());
+
+          Bitmap paddedBitmap = Bitmap.createBitmap((int)newWidth, (int)newHeight, Bitmap.Config.ARGB_8888);
+
+          Canvas canvas = new Canvas(paddedBitmap);
+          canvas.drawARGB(0x00, 0x00, 0x00, 0x00);
+          canvas.drawBitmap(
+              bitmap,
+              0,
+              0,
+              new Paint(Paint.FILTER_BITMAP_FLAG));
+
+          // Save scale
+          texture.clipScaleU = originalWidth / newWidth;
+          texture.clipScaleV = originalHeight / newHeight;
+
+          GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, paddedBitmap, 0);
+
+          paddedBitmap.recycle();
+          bitmap.recycle();
+        } else {
+
+          GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, bitmap, 0);
+          bitmap.recycle();
+        }
 
       } else if(compression.equals("etc1")) {
 
@@ -355,6 +397,19 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
     return texture;
   }
 
+  private int nearestPowerOfTwo(int v) {
+
+    v--;
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+    v++;
+
+    return v;
+  }
+
   public Texture createTextureFromBitmap(String name, Bitmap bitmap) {
 
     Texture texture = _newTexture(name);
@@ -367,7 +422,7 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
 
   private void _applyTextureOptions() {
     GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-    GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+    GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
 
     GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
     GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);

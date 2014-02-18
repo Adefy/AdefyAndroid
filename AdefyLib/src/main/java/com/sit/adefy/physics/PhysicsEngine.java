@@ -18,8 +18,8 @@ import java.util.List;
 // Wrapper for BulletPhysics, keeps track of objects and whatnot
 public class PhysicsEngine {
 
-  public int velIterations = 1;
-  public int posIterations = 1;
+  public int velIterations = 3;
+  public int posIterations = 3;
 
   private PhysicsThread pThread = null;
 
@@ -191,7 +191,7 @@ public class PhysicsEngine {
           }
 
         } catch (Exception e) {
-          e.printStackTrace();
+          //e.printStackTrace();
         }
 
         // Perform step, calculate elapsed time and divide by 1000 to get it
