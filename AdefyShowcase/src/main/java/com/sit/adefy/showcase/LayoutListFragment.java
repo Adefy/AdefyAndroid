@@ -17,12 +17,19 @@ public class LayoutListFragment extends ListFragment {
 
   private static AdListItem[] layouts = new AdListItem[] {
       new AdListItem(
-          "Flat Template",
-          "One of our template offerings; Creatives can be generated for this template from google play store app pages.",
-          R.drawable.templateportrait,
-          "flat_template",
+          "Inactive publisher ad",
+          "This ad gets delivered to inactive or disabled publishers, for testing purposes.",
+          R.drawable.test,
+          "test",
           ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
       )
+      // new AdListItem(
+      //     "Simple shapes example",
+      //     "A simple animation and physics example.",
+      //     R.drawable.shapes,
+      //     "adefy_shapes_template",
+      //     ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+      // )
   };
 
   private boolean loadRequestMade = false;
@@ -65,7 +72,7 @@ public class LayoutListFragment extends ListFragment {
     AdListItem demo = LayoutListFragment.layouts[position];
 
     if(!demo.isLoaded()) {
-      Toast.makeText(getActivity(), "Layout hasn't loaded yet, try again in a few seconds...", Toast.LENGTH_SHORT).show();
+      Toast.makeText(getActivity(), "Demo hasn't loaded yet, try again in a few seconds...", Toast.LENGTH_SHORT).show();
     } else {
       Intent adIntent = new Intent(getActivity(), AdefyScene.class);
       adIntent.putExtra("adName", demo.getType());

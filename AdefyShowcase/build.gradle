@@ -7,8 +7,8 @@ android {
     defaultConfig {
         minSdkVersion 13
         targetSdkVersion 18
-        versionCode 9
-        versionName "1.0.8"
+        versionCode 11
+        versionName "1.0.10"
     }
 
     productFlavors {
@@ -40,5 +40,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:+'
     natives "com.badlogicgames.gdx:gdx-platform:0.9.9:natives-armeabi"
     natives "com.badlogicgames.gdx:gdx-platform:0.9.9:natives-armeabi-v7a"
-    compile 'com.sit.adefy:AdefyLib:1.0.2@aar'
+    compile 'com.sit.adefy:AdefyLib:1.0.3@aar'
 }

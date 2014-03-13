@@ -144,7 +144,7 @@ public class AdefyDownloader {
     }
 
     if(adType != null) {
-      userInfo += "&type=" + adType;
+      userInfo += "&template=" + adType;
     }
 
     try {
@@ -176,9 +176,9 @@ public class AdefyDownloader {
 
   private HttpURLConnection establishConnection() throws IOException, KeyManagementException, NoSuchAlgorithmException {
 
-    URL url = new URL(serverInterface + gatherUserInformation());
+    URL url = new URL(serverInterface + gatherUserInformation() + "&type=organic");
 
-    Log.d("Adefy", "Fetching ad: " + serverInterface + gatherUserInformation());
+    Log.d("Adefy", "Fetching ad: " + serverInterface + gatherUserInformation() + "&type=organic");
 
     if(url.getProtocol().equals("https")) {
       SSLContext sslctx = SSLContext.getInstance("SSL");

@@ -16,7 +16,7 @@ public class TechDemoListFragment extends ListFragment {
 
   private static AdListItem[] techDemos = new AdListItem[] {
       new AdListItem(
-          "Angry Birds meet Skittles", "Physics, skittles, and some good 'ol suave marketing. (Also acts as a physics stress test)",
+          "Angry Birds meet Skittles", "Physics, skittles, and some good ol' suave marketing. (Also acts as a physics stress test)",
           R.drawable.skittles,
           "skittle_template",
           ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -33,13 +33,6 @@ public class TechDemoListFragment extends ListFragment {
           "A quality watch is great inside and out. Have a look at the internals of an elegant & precise accessory.",
           R.drawable.watch,
           "watch_template",
-          ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-      ),
-      new AdListItem(
-          "Inactive publisher ad",
-          "This ad gets delivered to inactive or disabled publishers, for testing purposes.",
-          R.drawable.test,
-          "test",
           ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
       )
   };
