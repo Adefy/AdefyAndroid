@@ -33,7 +33,6 @@ package com.sit.adefy.js;
 //   enableActorPhysics(Num mass, Num friction, Num elasticity, Num id) -> Bool success
 //   destroyPhysicsBody(Num id) -> Bool success
 
-import android.util.Log;
 import android.webkit.JavascriptInterface;
 
 import com.badlogic.gdx.math.Vector2;
@@ -193,7 +192,7 @@ public class JSActorInterface {
     Actor a = findActor(id);
     if (a == null) { return false; }
 
-    a.renderMode = mode;
+    a.mRenderMode = mode;
 
     return true;
   }

@@ -17,7 +17,6 @@ import com.badlogic.gdx.physics.box2d.Shape;
 import com.sit.adefy.AdefyRenderer;
 import com.sit.adefy.js.JSActorInterface;
 import com.sit.adefy.materials.Material;
-import com.sit.adefy.materials.SingleColorMaterial;
 import com.sit.adefy.materials.TexturedMaterial;
 import com.sit.adefy.objects.Color3;
 import com.sit.adefy.physics.BodyQueueDef;
@@ -30,13 +29,13 @@ import java.util.ArrayList;
 
 public abstract class Actor {
 
-  public boolean visible = true;
-  public int renderMode = 2;
+  public boolean mVisible = true;
+  public int mRenderMode = 2;
 
-  private int id;
-  private Body body = null;
-  private int layer = 0;
-  private int physicsLayer = 0;
+  private int mId;
+  private Body mBody = null;
+  private int mLayer = 0;
+  private int mPhysicsLayer = 0;
 
   private FloatBuffer vertBuffer;
   private FloatBuffer texBuffer;
@@ -45,7 +44,7 @@ public abstract class Actor {
   private float restitution;
 
   protected float vertices[];
-  protected float texVerts[] = null;
+  protected float texVerts[];
   protected float psyxVertices[] = null;
   private float[] modelView = new float[16];
 
@@ -53,15 +52,15 @@ public abstract class Actor {
   private Vector2 renderOffset = new Vector2(0.0f, 0.0f);
   private float rotation = 0.0f;
 
-  private Material material;
+  private TexturedMaterial material;
   private AdefyRenderer renderer;
   private Actor attachment = null;
 
   public Actor(AdefyRenderer renderer, int _id, float[] _vertices) {
-    this.id = _id;
+    this.mId = _id;
     this.renderer = renderer;
 
-    material = new SingleColorMaterial();
+    material = new TexturedMaterial();
     if(_vertices != null) { updateVertices(_vertices); }
     addToRenderer();
   }
@@ -69,27 +68,27 @@ public abstract class Actor {
   ///
   /// Getters
   ///
-  public int getLayer() { return layer; }
+  public int getLayer() { return mLayer; }
   public boolean hasAttachment() { return attachment != null; }
   public Actor getAttachment() { return attachment; }
   public Material getMaterial() { return material; }
   public String getMaterialName() { return material.getName(); }
   public AdefyRenderer getRenderer() { return renderer; }
-  public int getId() { return id; }
+  public int getId() { return mId; }
 
   public void getPosition(Vector2 store) {
-    if(body == null) {
+    if(mBody == null) {
       store.x = position.x;
       store.y = position.y;
     } else {
-      AdefyRenderer.worldToScreen(body.getPosition(), store);
+      AdefyRenderer.worldToScreen(mBody.getPosition(), store);
     }
   }
 
   public float getRotation() {
-    if(body == null) { return rotation; }
+    if(mBody == null) { return rotation; }
 
-    return body.getAngle() * 57.2957795786f;
+    return mBody.getAngle() * 57.2957795786f;
   }
 
   public float[] getVertices() {
@@ -108,63 +107,57 @@ public abstract class Actor {
   }
 
   public Color3 getColor() {
-    if(material.getName().equals(SingleColorMaterial.name)) {
-      return ((SingleColorMaterial)material).getColor();
-    }
-
-    return null;
+    return material.getColor();
   }
 
   ///
   /// Setters
   ///
   public void setLayer(int l) {
-    layer = l;
+    mLayer = l;
     removeFromRenderer();
     addToRenderer();
   }
 
   public void setPhysicsLayer(int l) {
-    physicsLayer = l;
+    mPhysicsLayer = l;
     destroyPhysicsBody();
     createPhysicsBody();
   }
 
   public void setColor(Color3 color) {
-    if(material.getName().equals(SingleColorMaterial.name)) {
-      ((SingleColorMaterial)material).setColor(color);
-    }
+    material.setColor(color);
   }
 
   // Modify the actor or the body
   public void setPosition(Vector2 position) {
-    if(body == null) {
+    if(mBody == null) {
       this.position = position;
     } else {
       Vector2 targetPosition = new Vector2();
       AdefyRenderer.screenToWorld(position, targetPosition);
-      body.setTransform(targetPosition, body.getAngle());
+      mBody.setTransform(targetPosition, mBody.getAngle());
     }
   }
 
   public void setPosition(Actor actor) {
     actor.getPosition(position);
 
-    if(body != null) {
+    if(mBody != null) {
       Vector2 targetPosition = new Vector2();
       AdefyRenderer.screenToWorld(position, targetPosition);
-      body.setTransform(targetPosition, body.getAngle());
+      mBody.setTransform(targetPosition, mBody.getAngle());
     }
   }
 
   // Modify the actor or the body
   public void setRotation(float rotation) {
-    if(body == null) {
+    if(mBody == null) {
       this.rotation = rotation;
     } else {
 
       // Convert to radians
-      body.setTransform(body.getPosition(), rotation * 0.0174532925f);
+      mBody.setTransform(mBody.getPosition(), rotation * 0.0174532925f);
     }
   }
 
@@ -188,13 +181,13 @@ public abstract class Actor {
       for(int i = 0; i < renderer.actors.size(); i++) {
 
         // Find smaller actor behind us
-        if(renderer.actors.get(i).getLayer() <= layer) {
+        if(renderer.actors.get(i).getLayer() <= mLayer) {
 
           // Make sure there is at least one more actor
           if(renderer.actors.size() >= i + 2) {
 
             // Check if the next actor is larger than us. If so, insert
-            if(renderer.actors.get(i + 1).getLayer() >= layer) {
+            if(renderer.actors.get(i + 1).getLayer() >= mLayer) {
               renderer.actors.add(i + 1, this);
               return;
             }
@@ -245,7 +238,7 @@ public abstract class Actor {
 
   public boolean setAttachmentVisibility(boolean visible) {
     if(attachment == null) { return false; }
-    attachment.visible = visible;
+    attachment.mVisible = visible;
 
     return true;
   }
@@ -263,18 +256,9 @@ public abstract class Actor {
       return;
     }
 
-    // Go through and find the texture handle
-    int[] handle = renderer.getTextureHandle(name);
-    float uScale = renderer.getTexture(name).clipScaleU;
-    float vScale = renderer.getTexture(name).clipScaleV;
-
-    if(!material.getName().equals(TexturedMaterial.name)) {
-      material = new TexturedMaterial(handle, uScale, vScale);
-    } else {
-      ((TexturedMaterial)this.material).setTextureHandle(handle);
-      ((TexturedMaterial)this.material).setUScale(uScale);
-      ((TexturedMaterial)this.material).setVScale(vScale);
-    }
+    material.setTextureHandle(renderer.getTextureHandle(name));
+    material.setUScale(renderer.getTexture(name).clipScaleU);
+    material.setVScale(renderer.getTexture(name).clipScaleV);
   }
 
   ///
@@ -292,7 +276,7 @@ public abstract class Actor {
     refreshVertBuffer();
     refreshTexVertBuffer();
 
-    if(body != null) {
+    if(mBody != null) {
       destroyPhysicsBody();
       createPhysicsBody(density, friction, restitution);
     }
@@ -360,7 +344,7 @@ public abstract class Actor {
   public void createPhysicsBody() { createPhysicsBody(density, friction, restitution); }
   public void createPhysicsBody(float _density, float _friction, float _restitution) {
 
-    if(body != null) { return; }
+    if(mBody != null) { return; }
 
     // Save values
     friction = _friction;
@@ -382,7 +366,7 @@ public abstract class Actor {
     bd.position.set(targetPosition);
     bd.angle = rotation * 0.0174532925f;
 
-    renderer.getPsyx().requestBodyCreation(new BodyQueueDef(id, bd));
+    renderer.getPsyx().requestBodyCreation(new BodyQueueDef(mId, bd));
   }
 
   public void onBodyCreation(Body body) {
@@ -395,8 +379,8 @@ public abstract class Actor {
     fd.restitution = restitution;
 
     // Layer
-    fd.filter.categoryBits = PhysicsEngine.getCategoryBits(physicsLayer);
-    fd.filter.maskBits = PhysicsEngine.getMaskBits(physicsLayer);
+    fd.filter.categoryBits = PhysicsEngine.getCategoryBits(mPhysicsLayer);
+    fd.filter.maskBits = PhysicsEngine.getMaskBits(mPhysicsLayer);
 
     body.createFixture(fd);
 
@@ -411,17 +395,17 @@ public abstract class Actor {
       body.setMassData(massdata);
     }
 
-    this.body = body;
+    this.mBody = body;
   }
 
   protected abstract Shape generateShape();
 
   // In reality, merely registers the body for destruction, which occurs in another thread
   public void destroyPhysicsBody() {
-    if(body == null) { return; }
+    if(mBody == null) { return; }
 
-    renderer.getPsyx().destroyBody(body);
-    body = null;
+    renderer.getPsyx().destroyBody(mBody);
+    mBody = null;
   }
 
   ///
@@ -429,7 +413,7 @@ public abstract class Actor {
   ///
 
   public void draw() {
-    if(!visible) { return; }
+    if(!mVisible) { return; }
 
     updateWorldState();
     setupRenderMatrix();
@@ -437,14 +421,14 @@ public abstract class Actor {
   }
 
   private void updateWorldState() {
-    if(body != null) {
-      AdefyRenderer.worldToScreen(body.getPosition(), position);
-      rotation = (float)Math.toDegrees(body.getAngle());
+    if(mBody != null) {
+      AdefyRenderer.worldToScreen(mBody.getPosition(), position);
+      rotation = (float)Math.toDegrees(mBody.getAngle());
     }
   }
 
   private int getGLRenderMode() {
-    if(renderMode == 2) {
+    if(mRenderMode == 2) {
       return GLES20.GL_TRIANGLE_FAN;
     } else {
       return GLES20.GL_TRIANGLE_STRIP;
@@ -458,18 +442,11 @@ public abstract class Actor {
   }
 
   private void drawMaterial() {
-    int drawMode = getGLRenderMode();
-    final Material drawMaterial = material;
-
-    if(drawMaterial.getName().equals(SingleColorMaterial.name)) {
-      ((SingleColorMaterial)drawMaterial).draw(vertBuffer, vertices.length / 3, drawMode, modelView);
-    } else if(drawMaterial.getName().equals(TexturedMaterial.name)) {
-      ((TexturedMaterial)drawMaterial).draw(vertBuffer, texBuffer, vertices.length / 3, drawMode, modelView);
-    }
+    material.draw(vertBuffer, texBuffer, vertices.length / 3, getGLRenderMode(), modelView);
   }
 
   public void destroy() {
-    if(body != null) { destroyPhysicsBody(); }
+    if(mBody != null) { destroyPhysicsBody(); }
     removeFromRenderer();
   }
 

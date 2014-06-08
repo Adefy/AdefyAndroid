@@ -17,7 +17,7 @@ import java.util.TimerTask;
 /*
   Computes and applies bezier animations. Great fun. Works in ms.
  */
-public class BezAnimation {
+public class BezAnimation extends Animation {
 
   private final Actor actor;
   private String property[];
@@ -27,19 +27,10 @@ public class BezAnimation {
   private float startVal;
   private float duration;
   private int fps;
+  private long startTime;
+  private boolean firstRun;
 
   private Vector2 tempVec = new Vector2();
-
-  // JS callback method names, directly executable from our end on the webview.
-  private String cbStart;
-  private String cbEnd;
-  private String cbStep;  // We pass the value at each step as an argument
-
-  // Signals that we've already animated, prevents future starts
-  private boolean animated = false;
-
-  // Amount we increment t by on each step
-  private float tIncr;
 
   public BezAnimation(
       Actor actor,
@@ -71,13 +62,7 @@ public class BezAnimation {
     this.duration = duration;
     this.fps = fps;
 
-    this.cbStart = cbStart;
-    this.cbEnd = cbEnd;
-    this.cbStep = cbStep;
-
     if(property != null) { validate(); }
-
-    tIncr = 1 / (duration * ((float)fps / 1000.0f));
   }
 
   // Used by the animation interface to direct properties we support to us
@@ -192,6 +177,8 @@ public class BezAnimation {
   // Go through and calculate values for each step, and return the result as a JSON array
   public String preCalculate(float _startVal) {
 
+    float tIncr = 1 / (duration * ((float)fps / 1000.0f));
+
     StringBuilder sb = new StringBuilder();
     sb.append("{ \"stepTime\": ").append(duration * tIncr).append(", \"values\": [");
 
@@ -248,59 +235,44 @@ public class BezAnimation {
     }
   }
 
+  // Called by the renderer with the current time. We use our start time, duration, and fps to step
+  // update ourselves, and finish the animation when needed.
+  public void rendererAnimateStep(long time) {
+    if(!isActive()) { return; }
+    if(time < startTime) { return; }
+
+    if(firstRun) {
+      getStartValue();
+      firstRun = false;
+    }
+
+    float t = (time - startTime) / duration;
+
+    if(t >= 1) {
+
+      update(1);
+      actor.getRenderer().animations.remove(this);
+      setActive(false);
+
+    } else {
+      update(t);
+    }
+  }
+
   // Starts a timer, and the animation
   public void animate() { animate(0); }
   public void animate(long start) {
-    if(animated) { return; } else { animated = true; }
+    if(isActive()) { return; }
     if(start < 0) { start = 0; }
     if(actor == null) {
       Log.w("BezAnimation", "Can't animate, no actor specified. Did you mean to preCalculate?");
       return;
     }
 
-    // if(cbStart.length() > 0) {
-      // AdefyScene.getWebView().loadUrl("javascript:" + cbStart + "();");
-    // }
+    setActive(true);
+    firstRun = true;
 
-    final float[] t = new float[1];
-    t[0] = -tIncr;
-
-    try {
-      AdefyRenderer.animationTimer.scheduleAtFixedRate(new TimerTask() {
-
-        private boolean firstRun = true;
-
-        @Override
-        public void run() {
-          t[0] += tIncr;
-
-          if(firstRun) {
-            getStartValue();
-            firstRun = false;
-          }
-
-          if(t[0] > 1) {
-            float val = update(1);
-            cancel();
-
-            // if(cbEnd.length() > 0) {
-              // AdefyScene.getWebView().loadUrl("javascript:" + cbEnd + "();");
-            // }
-          } else {
-            float val = update(t[0]);
-
-            // if(cbStep.length() > 0) {
-              // AdefyScene.getWebView().loadUrl("javascript:" + cbStep + "(" + val + ");");
-            // }
-          }
-        }
-      }, start, 1000 / fps);
-    } catch (Exception e) {
-
-      // Assume timer was cancelled, so make a new one and re-run the animate call
-      AdefyRenderer.animationTimer = new Timer();
-      animated = false;
-      animate(start);
-    }
+    startTime = System.currentTimeMillis() + start;
+    actor.getRenderer().animations.add(this);
   }
 }

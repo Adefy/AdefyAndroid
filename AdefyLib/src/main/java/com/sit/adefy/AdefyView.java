@@ -233,7 +233,7 @@ public class AdefyView extends GLSurfaceView {
       setupWebView();
 
     } else {
-      Toast.makeText(getContext(), "Ad failed to load :( You should let us know this happened!", Toast.LENGTH_LONG).show();
+      Toast.makeText(getContext(), "Ad failed to load", Toast.LENGTH_LONG).show();
 
       if (AdefyScene.getMe() != null) {
         AdefyScene.getMe().finish();

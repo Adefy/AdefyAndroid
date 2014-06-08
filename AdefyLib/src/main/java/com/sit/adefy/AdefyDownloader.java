@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -89,6 +90,7 @@ public class AdefyDownloader {
 
     try {
 
+      cleanAdFolder(folder);
       downloadArchive(establishConnection());
       if(folder != null) { unzipArchive(getDownloadName(), folder); }
       return true;
@@ -97,6 +99,30 @@ public class AdefyDownloader {
 
       e.printStackTrace();
       return false;
+    }
+  }
+
+  public void cleanAdFolder(String name) {
+    File folder = new File(ctx.getCacheDir() + "/" + name);
+    deleteDirectory(folder);
+  }
+
+  public void deleteDirectory(File dir) {
+    if(dir.isDirectory()) {
+      String[] children = dir.list();
+
+      for(int i = 0; i < children.length; i++) {
+        File child = new File(dir, children[i]);
+
+        if(child.isDirectory()) {
+          deleteDirectory(child);
+          child.delete();
+        } else {
+          child.delete();
+        }
+      }
+
+      dir.delete();
     }
   }
 
@@ -151,9 +177,10 @@ public class AdefyDownloader {
       AccountManager accountManager = AccountManager.get(ctx);
 
       if(accountManager != null) {
-        userInfo += "&username=" + accountManager.getAccounts()[0].name;
+        userInfo += "&username=" + URLEncoder.encode(accountManager.getAccounts()[0].name, "UTF-8");
       }
-    } catch (NullPointerException e) {
+
+    } catch (Exception e) {
       // We ignore the error, only attaching the username if we can
     }
 
@@ -231,14 +258,15 @@ public class AdefyDownloader {
     ZipInputStream zin = new ZipInputStream(fin);
     ZipEntry ze;
 
-    // Operate on each entry
-    while((ze = zin.getNextEntry()) != null) {
+    // Create directory
+    new File(ctx.getCacheDir() + "/" + dir).mkdirs();
 
-      // Create directory
-      new File(ctx.getCacheDir() + "/" + dir).mkdirs();
+    while((ze = zin.getNextEntry()) != null) {
 
       // Write file
       FileOutputStream fout = new FileOutputStream(ctx.getCacheDir() + "/" + dir + "/" + ze.getName());
+
+      Log.d("Adefy", "Writing " + ctx.getCacheDir() + "/" + dir + "/" + ze.getName());
 
       byte data[] = new byte[1024];
       int count;
@@ -250,6 +278,13 @@ public class AdefyDownloader {
       zin.closeEntry();
       fout.close();
     }
+  }
+
+  public boolean isDownloaded(String name) {
+    File folder = new File(ctx.getCacheDir() + "/" + name);
+    File manifest = new File(ctx.getCacheDir() + "/" + name + "/package.json");
+
+    return folder.exists() && folder.isDirectory() && manifest.exists() && manifest.isFile();
   }
 
   private class TrustingTrustManager implements X509TrustManager {

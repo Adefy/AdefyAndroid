@@ -18,7 +18,7 @@ import android.util.Log;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.sit.adefy.actors.TextActor;
-import com.sit.adefy.materials.SingleColorMaterial;
+import com.sit.adefy.animations.Animation;
 import com.sit.adefy.materials.TexturedMaterial;
 import com.sit.adefy.actors.Actor;
 import com.sit.adefy.objects.Texture;
@@ -33,7 +33,6 @@ import javax.microedition.khronos.opengles.GL10;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Timer;
@@ -55,6 +54,7 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
   }
 
   public final ArrayList<Actor> actors = new ArrayList<Actor>();
+  public final ArrayList<Animation> animations = new ArrayList<Animation>();
   private ArrayList<Texture> textures = new ArrayList<Texture>();
 
   private static int screenW = 0;
@@ -83,7 +83,6 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
 
     TexturedMaterial.justUsed = false;
     TexturedMaterial.previousTexture = -1;
-    SingleColorMaterial.justUsed = false;
   }
 
   public PhysicsEngine getPsyx() {
@@ -100,7 +99,6 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
     GLES20.glClearColor(clearCol.x, clearCol.y, clearCol.z, 1.0f);
 
     // Build shaders
-    SingleColorMaterial.buildShader();
     TexturedMaterial.buildShader();
   }
 
@@ -158,7 +156,7 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
     GLES20.glDepthFunc(GLES20.GL_LEQUAL);
 
     // Set ortho projection
-    Matrix.orthoM(projection, 0, 0, width, 0, height, -10, 10);
+    Matrix.orthoM(projection, 0, 0, width, 0, height, -100, 100);
 
     reloadTextures();
 
@@ -190,41 +188,57 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
     if(textureLoadQueued) { reloadTextures(); }
 
     // Keep track of frame time
-    long startTime = System.currentTimeMillis();
+    long frameStartTime = System.currentTimeMillis();
 
-    GLES20.glClearColor(clearCol.x, clearCol.y, clearCol.z, 1.0f);
-    GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+    // Step animations
+    for(int i = 0; i < animations.size(); i++) {
+      Animation animation = animations.get(i);
 
+      if(animation.isActive()) {
+        animation.rendererAnimateStep(frameStartTime);
+
+        // If the animation is now inactive, it was just deleted, so backtrack one spot.
+        if(!animation.isActive()) {
+          i--;
+        }
+      }
+    }
+
+    // This crashes sometimes when closing the ad. I don't have time to figure out how to deal with
+    // an invalid GL context in the instant before close, so we'll just wrap it for now.
     try {
+      // Clear screen
+      GLES20.glClearColor(clearCol.x, clearCol.y, clearCol.z, 1.0f);
+      GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+
+      // Render actors
       synchronized (actors) {
+        for (int i = 0; i < actors.size(); i++) {
+          Actor renderObject = actors.get(i);
 
-        for(int i = 0; i < actors.size(); i++) {
+          if (renderObject.mVisible) {
+            if (renderObject.hasAttachment()) {
 
-          Actor a = actors.get(i);
-
-          // Render only if visible
-          if(a.visible) {
-
-            // Render attachment instead, if necessary
-            if(a.hasAttachment()) {
-              if(a.getAttachment().visible) {
+              // Render attachment
+              if (renderObject.getAttachment().mVisible) {
 
                 // Store for now to update state
-                Actor temp = a.getAttachment();
-                temp.setPosition(a);
-                temp.setRotation(a.getRotation());
+                Actor attachment = renderObject.getAttachment();
+                attachment.setPosition(renderObject);
+                attachment.setRotation(renderObject.getRotation());
 
                 // Switch render subject
-                a = temp;
+                renderObject = attachment;
               }
             }
 
-            if(!a.getMaterialName().equals(material)) {
-              GLES20.glUseProgram(a.getMaterial().getShader());
-              material = a.getMaterialName();
+            // Render either
+            if (!renderObject.getMaterialName().equals(material)) {
+              GLES20.glUseProgram(renderObject.getMaterial().getShader());
+              material = renderObject.getMaterialName();
             }
 
-            a.draw();
+            renderObject.draw();
           }
         }
       }
@@ -235,9 +249,9 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
     long endTime = System.currentTimeMillis();
 
     // Ensure at most 60 FPS
-    if(endTime - startTime < targetFrameTime) {
+    if(endTime - frameStartTime < targetFrameTime) {
       try {
-        Thread.sleep(targetFrameTime - (endTime - startTime));
+        Thread.sleep(targetFrameTime - (endTime - frameStartTime));
       } catch (InterruptedException e) {
         e.printStackTrace();
       }

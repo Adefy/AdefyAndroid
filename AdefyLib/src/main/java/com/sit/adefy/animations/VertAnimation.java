@@ -15,18 +15,13 @@ import java.util.TimerTask;
 /*
   Applies a series of changes to an actors vertices at specified times
  */
-public class VertAnimation {
+public class VertAnimation extends Animation {
 
   private final Actor actor;
 
   private int[] delays;
   private String[][] deltas;
   private float[] udata;
-
-  // JS callback method names, directly executable from our end on the webview.
-  private String cbStart;
-  private String cbStep;
-  private String cbEnd;
 
   // Signals that we've already animated, prevents future starts
   private boolean animated = false;
@@ -54,9 +49,6 @@ public class VertAnimation {
     this.delays = delays;
     this.deltas = deltas;
     this.udata = udata;
-    this.cbStart = cbStart;
-    this.cbStep = cbStep;
-    this.cbEnd = cbEnd;
 
     validate();
   }
@@ -142,10 +134,6 @@ public class VertAnimation {
     if(animated) { return; } else { animated = true; }
     if(start < 0) { start = 0; }
 
-    // if(cbStart.length() > 0) {
-      // AdefyScene.getWebView().loadUrl("javascript:" + cbStart + "();");
-    // }
-
     final int[] nextDSet = new int[1];
     nextDSet[0] = 0;
 
@@ -156,27 +144,6 @@ public class VertAnimation {
         @Override
         public void run() {
           applyDeltaSet(deltas[nextDSet[0]]);
-
-          /*
-          if (cbStep.length() > 0) {
-
-            String userData = "";
-
-            if (udata != null) {
-              if (udata.length == 1) {
-                userData = Float.toString(udata[0]);
-              } else {
-                userData = Float.toString(udata[nextDSet[0]]);
-              }
-            }
-
-            AdefyScene.getWebView().loadUrl("javascript:" + cbStep + "(" + userData + ");");
-          }*/
-
-          // Call end callback if necessary
-          // if (nextDSet[0] == delays[delays.length - 1] && cbEnd.length() > 0) {
-            // AdefyScene.getWebView().loadUrl("javascript:" + cbEnd + "();");
-          //   }
 
           nextDSet[0]++;
         }
