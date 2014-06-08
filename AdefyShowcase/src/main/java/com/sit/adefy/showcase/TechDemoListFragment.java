@@ -51,11 +51,16 @@ public class TechDemoListFragment extends ListFragment {
           adDownloader.setLandscape(true);
         }
 
-        adDownloader.fetchAd(demo.getType());
+        // Only download if we don't already have it
+        if(!adDownloader.isDownloaded(demo.getType())) {
+          adDownloader.fetchAd(demo.getType());
+        }
+
         demo.setLoaded();
 
         return null;
       }
+
     }.execute();
   }
 

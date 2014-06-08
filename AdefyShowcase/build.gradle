@@ -30,7 +30,7 @@ android {
 repositories {
     mavenCentral()
     flatDir {
-        dirs '../AdefyLib/build/libs'
+        dirs '../AdefyLib/build/outputs/aar'
     }
 }
 
@@ -40,5 +40,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:+'
     natives "com.badlogicgames.gdx:gdx-platform:0.9.9:natives-armeabi"
     natives "com.badlogicgames.gdx:gdx-platform:0.9.9:natives-armeabi-v7a"
-    compile 'com.sit.adefy:AdefyLib:1.0.3@aar'
+    compile 'com.sit.adefy:AdefyLib:1.0.4@aar'
 }

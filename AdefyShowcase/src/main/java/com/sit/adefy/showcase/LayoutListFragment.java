@@ -42,7 +42,11 @@ public class LayoutListFragment extends ListFragment {
 
         AdefyDownloader adDownloader = new AdefyDownloader(getActivity(), null, demo.getType());
 
-        adDownloader.fetchAd(demo.getType());
+        // Only download if we don't already have it
+        if(!adDownloader.isDownloaded(demo.getType())) {
+          adDownloader.fetchAd(demo.getType());
+        }
+
         demo.setLoaded();
 
         return null;
