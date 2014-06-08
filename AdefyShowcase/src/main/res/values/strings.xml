@@ -9,4 +9,7 @@
     <string name="about_teaser_1">We believe in enabling advertising that cultivates user experiences. Existing ad formats are obtuse, and fit in poorly with mobile use patterns. The web has and is evolving dramatically, and content delivery needs to reflect this.</string>
     <string name="about_teaser_2">Our first step is load screen ads, with true in-feed offerings following.</string>
 
+    <string name="drawer_open">Drawer open</string>
+    <string name="drawer_closed">Drawer closed</string>
+
 </resources>
