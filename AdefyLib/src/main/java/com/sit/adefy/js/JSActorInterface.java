@@ -4,23 +4,32 @@ package com.sit.adefy.js;
 // Copyright © 2013 Spectrum IT Solutions Gmbh - All Rights Reserved
 //
 // Provides:
-//   createActor(String verts) -> Num id
+//   createPolygonActor(String verts) -> Num id
+//   createRectangleActor(Num w, Num h) -> Num id
+//   createCircleActor(Num radius, String verts) -> Num id
+//   createTextActor(String text, Num size, Num r, Num g, Num b) -> Num id
+//   destroyActor(Num id) -> Bool success
+
 //   attachTexture(String texture, Num w, Num h, Num x, Num y, Num angle, Num id) -> Bool success
 //   removeAttachment(Num id) -> Bool success
 //   setAttachmentVisibility(Bool visible, Num id) -> Bool success
+
 //   setActorLayer(Num layer, Num id) -> Bool success
 //   setActorPhysicsLayer(Num layer, Num id) -> Bool success
-//   updateVertices(String verts, Num id) -> Bool success
-//   getVertices(Num id) -> String verts
-//   destroyActor(Num id) -> Bool success
 //   setPhysicsVertices(String verts, Num id) -> Bool success
 //   setRenderMode(Num mode, Num id) -> Bool success
+
+//   updateVertices(String verts, Num id) -> Bool success
+//   getVertices(Num id) -> String verts
+
 //   setActorPosition(Num x, Num y, Number id) -> Bool success
 //   getActorPosition(Num id) -> String position
 //   setActorRotation(Num angle, Num id, Boolean radians) -> Bool success
 //   getActorRotation(Num id, Boolean radians) -> Num angle
 //   setActorColor(Num r, Num g, Num b, Num id) -> Bool success
 //   getActorColor(Num id) -> String color
+//   setActorTexture(String name, Num id) -> Bool success
+
 //   enableActorPhysics(Num mass, Num friction, Num elasticity, Num id) -> Bool success
 //   destroyPhysicsBody(Num id) -> Bool success
 

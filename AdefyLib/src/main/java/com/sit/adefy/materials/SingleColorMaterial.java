@@ -67,6 +67,7 @@ public class SingleColorMaterial extends Material {
   // Called by our renderer when we can create our shader
   public static void buildShader() {
     shader = AdefyRenderer.buildShader(vertCode, fragCode);
+
     positionHandle = GLES20.glGetAttribLocation(shader, "Position");
     colorHandle = GLES20.glGetUniformLocation(shader, "Color");
     modelHandle = GLES20.glGetUniformLocation(shader, "ModelView");

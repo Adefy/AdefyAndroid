@@ -68,6 +68,8 @@ public class AdefyView extends GLSurfaceView {
   private float remindMeButtonW = 0;
   private float remindMeButtonH = 0;
 
+  private Boolean delayInit = false;
+
   // Interfaces!
   private String ifaceDef =
       "javascript:(function(){" +
@@ -96,6 +98,19 @@ public class AdefyView extends GLSurfaceView {
     if(adType != null) { this.adType = adType; }
     if(apiKey != null) { this.apiKey = apiKey; }
     if(adName != null) { this.adName = adName; }
+    if(serverInterface != null) { this.serverInterface = serverInterface; }
+
+    init(context, null);
+  }
+
+  // As above, except we can also control if init runs immediately
+  public AdefyView(String apiKey, String adName, String serverInterface, Context context, String adType, Boolean delayInit) {
+    super(context);
+
+    if(adType != null) { this.adType = adType; }
+    if(apiKey != null) { this.apiKey = apiKey; }
+    if(adName != null) { this.adName = adName; }
+    if(delayInit != null) { this.delayInit = delayInit; }
     if(serverInterface != null) { this.serverInterface = serverInterface; }
 
     init(context, null);
@@ -203,6 +218,7 @@ public class AdefyView extends GLSurfaceView {
 
   // Called once an ad is locally available
   private void finalInit() {
+    if(delayInit) { return; }
 
     boolean result = parseDelivered();
 
@@ -215,9 +231,13 @@ public class AdefyView extends GLSurfaceView {
       adRuntime.append("})()");
 
       setupWebView();
+
     } else {
       Toast.makeText(getContext(), "Ad failed to load :( You should let us know this happened!", Toast.LENGTH_LONG).show();
-      AdefyScene.getMe().finish();
+
+      if (AdefyScene.getMe() != null) {
+        AdefyScene.getMe().finish();
+      }
     }
   }
 
@@ -281,6 +301,13 @@ public class AdefyView extends GLSurfaceView {
 
     } catch (Exception e) {
       e.printStackTrace();
+    }
+  }
+
+  public void continueInit() {
+    if(delayInit) {
+      delayInit = false;
+      finalInit();
     }
   }
 

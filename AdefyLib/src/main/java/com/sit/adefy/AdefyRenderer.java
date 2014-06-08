@@ -60,7 +60,7 @@ public class AdefyRenderer implements GLSurfaceView.Renderer {
   private static int screenW = 0;
   private static int screenH = 0;
   private int targetFPS = 60;
-  private int targetFrameTime = 16;
+  private int targetFrameTime = 1000 / 60;
 
   private static float[] projection = new float[16];
   public static Timer animationTimer = new Timer();

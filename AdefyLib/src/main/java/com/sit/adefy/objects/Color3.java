@@ -36,10 +36,6 @@ public class Color3 {
     this.bF = b;
   }
 
-  public Vector3 toFloat() {
-    return new Vector3((float)r / 255.0f, (float)g / 255.0f, (float)b / 255.0f);
-  }
-
   public void toFloatArray(float[] array) {
     array[0] = (float)r / 255.0f;
     array[1] = (float)g / 255.0f;
