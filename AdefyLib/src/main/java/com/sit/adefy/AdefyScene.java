@@ -75,10 +75,4 @@ public class AdefyScene extends Activity {
   public AdefyView getAdefyView() {
     return mView;
   }
-
-  public static void setLoadPercentage(float percentage) {
-    if(AdefyScene.me != null) {
-      AdefyScene.me.getAdefyView().setLoadPercentage(percentage);
-    }
-  }
 }

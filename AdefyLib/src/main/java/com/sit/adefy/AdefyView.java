@@ -495,10 +495,4 @@ public class AdefyView extends GLSurfaceView {
 
     return true;
   }
-
-  public void setLoadPercentage(float percentage) {
-    if(web != null) {
-      web.loadUrl("javascript:window.__adefy__setPercentage(" + percentage + ")");
-    }
-  }
 }
